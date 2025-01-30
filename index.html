@@ -1,29 +1,87 @@
 <!DOCTYPE html>
 <html>
 <head>
- <title>Test</title>
- <style>
-  body {
-   background-color: white;
-   padding: 30px;
-  }
- </style>
- <script>
-  function checkPassword() {
-   var password = document.getElementById("passwordBox");
-   var passwordText = password.value;
-   if(passwordText == "notyet") {
-    return true;
-   }
-   alert("Incorrect password, try again.");
-   return false;
-   }
- </script>
+  <meta charset="UTF-8" />
+  <title>Valentine's Request</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(120deg, #ffafbd, #ffc3a0);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 2rem;
+      text-align: center;
+      color: #333;
+    }
+
+    .button-container {
+      display: flex;
+      gap: 2rem;
+    }
+
+    button {
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    #yes-btn {
+      background-color: #ff6f61;
+      color: #fff;
+    }
+
+    #no-btn {
+      background-color: #f4f4f4;
+      color: #333;
+    }
+
+  </style>
 </head>
 <body>
- <p style="font-size: 30pt;">Under construction...</p>
- <p>This website is under construction.</p>
- <p> <i>Come again another time, cheers.</i> </p>
- </a>
+  <h1>Will you be my Valentine?</h1>
+  <div class="button-container">
+    <button id="yes-btn" onclick="location.href='https://www.google.com';">Yes!</button>
+    <button id="no-btn">No!</button>
+  </div>
+
+  <script>
+    const noBtn = document.getElementById('no-btn');
+
+    // We'll keep an array of messages.
+    const messages = [
+      "Are you really sure?",
+      "Wait, are you absolutely sure?",
+      "Come on, don't break my heart. Still sure?",
+      "Ouch... but seriously, are you certain?",
+      "There's no going back if you keep saying no, you know... sure now?",
+      "This is your last chance! Are you sure?",
+      "Alright, I give up... but are you sure?"
+    ];
+
+    let index = 0;
+
+    noBtn.addEventListener('click', function handleNoClick() {
+      // show an alert with the next message
+      alert(messages[index]);
+      // increment the index, wrap around if at the end
+      index = (index + 1) % messages.length;
+    });
+  </script>
 </body>
 </html>
