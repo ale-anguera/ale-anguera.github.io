@@ -63,16 +63,17 @@
 </head>
 <body>
   <h1>Will you be my Valentine?</h1>
-  <h2>Well technically...</h2>
+  <h2>Well, technically it is an anniversary invite... ☝🏼🤓</h2>
   <div class="button-container">
-    <button id="yes-btn" onclick="location.href='https://www.google.com';">Yes!</button>
+    <button id="yes-btn">Yes!</button>
     <button id="no-btn">No!</button>
   </div>
 
   <script>
+    const yesBtn = document.getElementById('yes-btn');
     const noBtn = document.getElementById('no-btn');
 
-    // We'll keep an array of messages.
+    // We'll keep an array of messages for the "No!" button.
     const messages = [
       "Are you really sure?",
       "Wait, are you absolutely sure?",
@@ -90,6 +91,17 @@
       alert(messages[index]);
       // increment the index, wrap around if at the end
       index = (index + 1) % messages.length;
+    });
+
+    // When the 'Yes!' button is clicked, replace the h1 heading's text
+    // with 'Reservation...' and hide the buttons.
+    yesBtn.addEventListener('click', function handleYesClick() {
+      const heading = document.querySelector('h1');
+      heading.textContent = 'We have a reservation at Chakh Dhoom on Saturday, 8th February at 7:00 PM.';
+
+      // Hide the button container.
+      const buttonContainer = document.querySelector('.button-container');
+      buttonContainer.style.display = 'none';
     });
   </script>
 </body>
