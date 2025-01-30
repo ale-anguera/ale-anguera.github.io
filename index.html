@@ -62,8 +62,8 @@
   </style>
 </head>
 <body>
-  <h1>Will you be my Valentine?</h1>
-  <h2>Well, technically it is an anniversary invite... ☝🏼🤓</h2>
+  <h1>Emily Tolete, will you be my Valentine?</h1>
+  <h2>Well, technically it's an anniversary invite... ☝🏼🤓</h2>
   <div class="button-container">
     <button id="yes-btn">Yes!</button>
     <button id="no-btn">No!</button>
@@ -87,19 +87,17 @@
     let index = 0;
 
     noBtn.addEventListener('click', function handleNoClick() {
-      // show an alert with the next message
       alert(messages[index]);
-      // increment the index, wrap around if at the end
       index = (index + 1) % messages.length;
     });
 
-    // When the 'Yes!' button is clicked, replace the h1 heading's text
-    // with 'Reservation...' and hide the buttons.
     yesBtn.addEventListener('click', function handleYesClick() {
       const heading = document.querySelector('h1');
-      heading.textContent = 'We have a reservation at Chakh Dhoom on Saturday, 8th February at 7:00 PM.';
+      heading.textContent = 'We have a reservation at Chakh Dhoom! 🎉🥘';
 
-      // Hide the button container.
+      const subHeading = document.querySelector('h2');
+      subHeading.textContent = 'Save the date: February 8th, at 7:00 PM!';
+
       const buttonContainer = document.querySelector('.button-container');
       buttonContainer.style.display = 'none';
     });
