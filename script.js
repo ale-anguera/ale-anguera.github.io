@@ -153,7 +153,7 @@ function diceToAscii(dice) {
   // index line
   let idxParts = [];
   for (let i = 0; i < dice.length; i++) {
-    idxParts.push(`   (${i + 1})   `);
+    idxParts.push(`   (${i + 1})    `);
   }
   lines[5] = idxParts.join(" ");
 
