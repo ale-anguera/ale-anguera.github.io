@@ -1,693 +1,546 @@
-/* script.js */
+/**
+ * Insult Sword Fighting™ — Browser Version
+ * Ported from insultFightingNew.py
+ * 
+ * Usage:
+ *   Simply open index.html in a modern browser.
+ *   All game logic and UI lives here.
+ */
+
 (() => {
-  // ----------------------------
-  // Cached DOM elements
-  // ----------------------------
-  const outputEl = document.getElementById('game-output');
-  const inputArea = document.getElementById('input-area');
-  const userInput = document.getElementById('user-input');
-  const submitBtn = document.getElementById('submit-btn');
+  // ─── DATA DEFINITIONS ───────────────────────────────────────────────────────
 
-  // ----------------------------
-  // Game data (porting from Python)
-  // ----------------------------
+  // All “real” insults with their matching retorts (for pirate‐tiers).
   const AVAILABLE_INSULTS = [
-    ["You fight like a dairy farmer!", "How appropriate. You fight like a cow."],
-    ["I've heard you were a contemptible sneak!", "Too bad no one's ever heard of YOU at all."],
-    ["People fall at my feet when they see me coming!", "Even BEFORE they smell your breath?"],
-    ["I'm not going to take your insolence sitting down!", "Your hemorrhoids are flaring up again, eh?"],
-    ["There are no words for how disgusting you are.", "Yes there are. You just never learned them."],
-    ["You make me want to puke.", "You make me think somebody already did."],
-    ["My handkerchief will wipe up your blood!", "So you got that job as janitor, after all."],
-    ["I got this scar on my face during a mighty struggle!", "I hope now you've learned to stop picking your nose."],
-    ["You're no match for my brains, you poor fool.", "I'd be in real trouble if you ever used them."],
-    ["You have the manners of a beggar.", "I wanted to make sure you'd feel comfortable with me."],
-    ["I once owned a dog that was smarter than you.", "He must have taught you everything you know."],
-    ["Nobody's ever drawn blood from me and nobody ever will.", "You run THAT fast?"],
-    ["I've spoken with apes more polite than you.", "I'm glad to hear you attended your family reunion."],
-    ["Soon you'll be wearing my sword like a shish kebab!", "First you better stop waving it like a feather-duster."],
-    ["This is the END for you, you gutter-crawling cur!", "And I've got a little TIP for you, get the POINT?"]
+    { insult: "You fight like a dairy farmer!", retort: "How appropriate. You fight like a cow." },
+    { insult: "I've heard you were a contemptible sneak!", retort: "Too bad no one's ever heard of YOU at all." },
+    { insult: "People fall at my feet when they see me coming!", retort: "Even BEFORE they smell your breath?" },
+    { insult: "I'm not going to take your insolence sitting down!", retort: "Your hemorrhoids are flaring up again, eh?" },
+    { insult: "There are no words for how disgusting you are.", retort: "Yes there are. You just never learned them." },
+    { insult: "You make me want to puke.", retort: "You make me think somebody already did." },
+    { insult: "My handkerchief will wipe up your blood!", retort: "So you got that job as janitor, after all." },
+    { insult: "I got this scar on my face during a mighty struggle!", retort: "I hope now you've learned to stop picking your nose." },
+    { insult: "You're no match for my brains, you poor fool.", retort: "I'd be in real trouble if you ever used them." },
+    { insult: "You have the manners of a beggar.", retort: "I wanted to make sure you'd feel comfortable with me." },
   ];
 
-  const SWORDMASTER_INSULTS = [
-    ["I've got a long, sharp lesson for you you to learn today.", "And I've got a little TIP for you. Get the POINT?"],
-    ["My tongue is sharper then any sword.", "First you’d better stop waving it like a feather-duster."],
-    ["My name is feared in every dirty corner of this island!", "So you got that job as janitor, after all."],
-    ["My wisest enemies run away at the first sight of me!", "Even BEFORE they smell your breath?"],
-    ["Only once have I met such a coward!", "He must have taught you everything you know."],
-    ["If your brother's like you, better to marry a pig.", "You make me think somebody already did."],
-    ["No one will ever catch ME fighting as badly as you do.", "You run THAT fast?"],
-    ["I will milk every drop of blood from your body!", "How appropriate. You fight like a cow."],
-    ["My last fight ended with my hands covered with blood.", "I hope now you've learned to stop picking your nose."],
-    ["I hope you have a boat ready for a quick escape.", "Why, did you want to borrow one?"],
-    ["My sword is famous all over the Caribbean!", "Too bad no one's ever heard of YOU at all."],
-    ["I've got the courage and skill of a master swordsman!", "I'd be in real trouble if you ever used them."],
-    ["Every word you say to me is stupid.", "I wanted to make sure you'd feel comfortable with me."],
-    ["You are a pain in the backside, sir!", "Your hemorrhoids are flaring up again, eh?"],
-    ["There are no clever moves that can help you now.", "Yes, there are. You just never learned them."],
-    ["Now I know what filth and stupidity really are.", "I'm glad to hear you attended your family reunion."],
-    ["I usually see people like you passed-out on tavern floors.", "Even BEFORE they smell your breath?"]
-  ];
-
+  // Some “throwaway” insults that aren’t in AVAILABLE_INSULTS but pirates will fallback to retort.
   const THROWAWAY_INSULTS = [
     "Boy are you ugly!",
     "What an idiot",
     "You call yourself a pirate!"
   ];
 
-  // Learned insults & retorts; persist across fights
-  let insultsLearned = [
-    "You fight like a dairy farmer!",
-    "Soon you'll be wearing my sword like a shish kebab!"
-  ];
-  let retortsLearned = [
-    "How appropriate. You fight like a cow.",
-    "First you better stop waving it like a feather-duster."
+  // SWORDMASTER uses a fixed list of insult/retort pairs, sequentially.
+  const SWORDMASTER_INSULTS = [
+    { insult: "I've got a long, sharp lesson for you you to learn today.", retort: "And I've got a little TIP for you. Get the POINT?" },
+    { insult: "My tongue is sharper then any sword.", retort: "First you’d better stop waving it like a feather-duster." },
+    { insult: "My name is feared in every dirty corner of this island!", retort: "So you got that job as janitor, after all." },
+    { insult: "My wisest enemies run away at the first sight of me!", retort: "Even BEFORE they smell your breath?" },
+    { insult: "Only once have I met such a coward!", retort: "He must have taught you everything you know." },
+    { insult: "If your brother's like you, better to marry a pig.", retort: "You make me think somebody already did." },
+    { insult: "No one will ever catch ME fighting as badly as you do.", retort: "You run THAT fast?" },
+    { insult: "I will milk every drop of blood from your body!", retort: "How appropriate. You fight like a cow." },
+    { insult: "My last fight ended with my hands covered with blood.", retort: "I hope now you've learned to stop picking your nose." },
+    { insult: "I hope you have a boat ready for a quick escape.", retort: "Why, did you want to borrow one?" },
+    { insult: "My sword is famous all over the Caribbean!", retort: "Too bad no one's ever heard of YOU at all." },
+    { insult: "I've got the courage and skill of a master swordsman!", retort: "I'd be in real trouble if you ever used them." },
+    { insult: "Every word you say to me is stupid.", retort: "I wanted to make sure you'd feel comfortable with me." },
+    { insult: "You are a pain in the backside, sir!", retort: "Your hemorrhoids are flaring up again, eh?" },
+    { insult: "There are no clever moves that can help you now.", retort: "Yes, there are. You just never learned them." },
+    { insult: "Now I know what filth and stupidity really are.", retort: "I'm glad to hear you attended your family reunion." },
+    { insult: "I usually see people like you passed-out on tavern floors.", retort: "Even BEFORE they smell your breath?" }
   ];
 
-  // Pirate tiers & weights (to mimic random.choices)
+  // Pirate tiers (name + how many insults they “know” from AVAILABLE_INSULTS).
+  // Weights [5,4,3,2,1] → more “Scurvy” than “Stinking”, etc.
   const PIRATE_TIERS = [
-    { name: "Scurvy Pirate",     maxIndex: 4,  weight: 5 },
-    { name: "Stinking Pirate",    maxIndex: 7,  weight: 4 },
-    { name: "Ugly Pirate",        maxIndex: 9,  weight: 3 },
-    { name: "Intimidating Pirate",maxIndex: 12, weight: 2 },
-    { name: "Dangerous Pirate",   maxIndex: AVAILABLE_INSULTS.length, weight: 1 }
+    { name: "Scurvy Pirate",     tierMax: 4,  weight: 5 },
+    { name: "Stinking Pirate",   tierMax: 7,  weight: 4 },
+    { name: "Ugly Pirate",       tierMax: 9,  weight: 3 },
+    { name: "Intimidating Pirate", tierMax: 12, weight: 2 },
+    { name: "Dangerous Pirate",  tierMax: AVAILABLE_INSULTS.length, weight: 1 }
   ];
 
-  // ----------------------------
-  // State variables
-  // ----------------------------
-  let gameState = "splash";      // splash → title → introName → regularDuel → pirateResponse → playerResponse → postDuelChoice → swordmasterResponse → swordmasterNext
-  let playerName = "";
-  let currentTier = null;        // chosen pirate tier object
-  let pirateLives = 0;
-  let playerLives = 0;
-  let usedInsultsThisPirate = [];
-  let currentInsult = "";
-  let currentCorrectRetort = "";
-  let currentPlayerInsultOptions = []; // array of strings for player turn
-  let currentPirateRound = 0;    // index into SWORDMASTER_INSULTS during swordmaster challenge
+  // Fallback retorts for when someone “does not know” the correct retort.
+  const FALLBACK_RETORTS = [
+    "Oh yeah?",
+    "I...ing, I'm shaking.",
+    "I am rubber, you are glue."
+  ];
 
-  // ----------------------------
-  // Utility functions
-  // ----------------------------
+  // ─── STATE ───────────────────────────────────────────────────────────────────
+  let state = {
+    playerName: "",
+    insultsLearned: [  // Start with two learned from the Python script
+      "You fight like a dairy farmer!",
+      "Soon you'll be wearing my sword like a shish kebab!"
+    ],
+    retortsLearned: [ // Start with two learned retorts from the Python
+      "How appropriate. You fight like a cow.",
+      "First you better stop waving it like a feather-duster."
+    ],
+    inGame: false,
+    phase: "title",   // one of: title, intro, regular, swordmaster
+    // REGULAR DUEL VARIABLES:
+    pirateLives: 0,
+    playerLives: 0,
+    currentPirateTier: null,
+    usedInsultsForThisPirate: [],
+    turn: "player",   // "player" or "pirate"
+    // SWORDMASTER VARIABLES:
+    swordmasterIndex: 0
+  };
 
+  // ─── REFERENCE TO DOM ELEMENTS ────────────────────────────────────────────────
+  let gameContainer;   // The main wrapper div
+  let textArea;        // Where all text is printed
+  let inputArea;       // The bottom region (text input or choice buttons)
+  let textInput;       // For free‐text or number input
+  let submitButton;    // For “press Enter” or “Submit”
+  
+  // ─── UTILITY / UI HELPERS ────────────────────────────────────────────────────
+  
+  // Append (or replace) the #game-container with the basic structure.
+  function initUI() {
+    gameContainer.innerHTML = "";
+
+    // 1) A large text area (scrollable) for story/dialog.
+    textArea = document.createElement("div");
+    textArea.id = "text-area";
+    textArea.innerText = "";
+    gameContainer.appendChild(textArea);
+
+    // 2) An area for inputs (buttons or text + button).
+    inputArea = document.createElement("div");
+    inputArea.id = "input-area";
+    gameContainer.appendChild(inputArea);
+  }
+
+  // Clear the text area completely.
   function clearScreen() {
-    outputEl.textContent = "";
+    textArea.innerText = "";
+    inputArea.innerHTML = "";
+    // In case a scroll was present, scroll back up.
+    textArea.scrollTop = 0;
   }
 
-  function appendLine(text = "") {
-    outputEl.textContent += text + "\n";
-    // Auto-scroll to bottom
-    outputEl.scrollTop = outputEl.scrollHeight;
+  // Append a line of text (with a newline).
+  function println(str = "") {
+    textArea.innerText += str + "\n";
+    // Always auto-scroll to bottom.
+    textArea.scrollTop = textArea.scrollHeight;
   }
 
-  function showInputArea() {
-    inputArea.style.display = "flex";
-    userInput.focus();
+  // Show a big block of multi‐line text at once.
+  function showBlockOfText(block) {
+    textArea.innerText = block;
+    textArea.scrollTop = textArea.scrollHeight;
   }
 
-  function hideInputArea() {
-    inputArea.style.display = "none";
-    userInput.value = "";
-  }
-
-  function waitForResizeThenFocus() {
-    // In case the DOM reflow is needed
-    setTimeout(() => userInput.focus(), 50);
-  }
-
+  // Display hearts (colored) for “lives”.
   function displayHearts(label, lives) {
-    let hearts = "♥︎".repeat(lives) + "♡".repeat(3 - lives);
-    appendLine(`${label}: ${hearts}`);
+    let full = "♥︎".repeat(lives);
+    let empty = "♡".repeat(3 - lives);
+    println(`${label}: ` + full.split("").map(ch => `<span class="heart-full">${ch}</span>`).join("") +
+            empty.split("").map(ch => `<span class="heart-empty">${ch}</span>`).join(""));
   }
 
-  function chooseRandomPirateTier() {
-    // Weighted random selection from PIRATE_TIERS
-    let totalWeight = PIRATE_TIERS.reduce((sum, t) => sum + t.weight, 0);
-    let pick = Math.random() * totalWeight;
-    let cum = 0;
-    for (let tier of PIRATE_TIERS) {
-      cum += tier.weight;
-      if (pick <= cum) {
-        return tier;
-      }
-    }
-    return PIRATE_TIERS[PIRATE_TIERS.length - 1];
+  // Pause then call callback (ms). Use setTimeout.
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  function getRandomInt(max) {
+  // Pick a random integer between [0, max-1].
+  function randInt(max) {
     return Math.floor(Math.random() * max);
   }
 
-  function getFallbackRetort() {
-    const FALLBACKS = [
-      "Oh yeah?",
-      "I'm shaking, I'm shaking.",
-      "I am rubber, you are glue."
-    ];
-    return FALLBACKS[getRandomInt(FALLBACKS.length)];
-  }
-
-  function promptText(textToShow, nextState) {
-    clearScreen();
-    appendLine(textToShow);
-    appendLine("");
-    appendLine("> ");
-    gameState = nextState;
-    showInputArea();
-    waitForResizeThenFocus();
-  }
-
-  // ----------------------------
-  // Game flow functions
-  // ----------------------------
-
-  function startSplash() {
-    clearScreen();
-    appendLine("        ----------------------------");
-    appendLine("");
-    appendLine("        Deep In The Atlantic Ocean...");
-    appendLine("");
-    appendLine("        The Island of Duck™");
-    appendLine("");
-    appendLine("        ----------------------------");
-    appendLine("");
-    appendLine("   Created and Designed by Alejandro Anguera de la Rosa");
-    appendLine("              Version 0.8.0");
-    appendLine("");
-    appendLine("");
-    appendLine("     Press Enter to start...");
-    appendLine("");
-    gameState = "title";
-    showInputArea();
-    waitForResizeThenFocus();
-  }
-
-  function startTitleScreen() {
-    clearScreen();
-    const titleArt = [
-      "████████╗██╗░░██╗███████╗  ░██████╗███████╗░█████╗░██████╗░███████╗████████╗  ░█████╗░███████╗",
-      "╚══██╔══╝██║░░██║██╔════╝  ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔════╝╚══██╔══╝  ██╔══██╗██╔════╝",
-      "░░░██║░░░███████║█████╗░░  ╚█████╗░█████╗░░██║░░╚═╝██████╔╝█████╗░░░░░██║░░░  ██║░░██║█████╗░░",
-      "░░░██║░░░██╔══██║██╔══╝░░  ░╚═══██╗██╔══╝░░██║░░██╗██╔══██╗██╔══╝░░░░░██║░░░  ██║░░██║██╔══╝░░",
-      "░░░██║░░░██║░░██║███████╗  ██████╔╝███████╗╚█████╔╝██║░░██║███████╗░░░██║░░░  ╚█████╔╝██║░░░░░",
-      "░░░╚═╝░░░╚═╝░░╚═╝╚══════╝  ╚═════╝░╚══════╝░╚════╝░╚═╝░░╚═╝╚══════╝░░░╚═╝░░░  ░╚════╝░╚═╝░░░░░",
-      "",
-      "██████╗░██╗░░░██╗░█████╗░██╗░░██╗  ██╗░██████╗██╗░░░░░░█████╗░███╗░░██╗██████╗░██╗™",
-      "██╔══██╗██║░░░██║██╔══██╗██║░██╔╝  ██║██╔════╝██║░░░░░██╔══██╗████╗░██║██╔══██╗╚═╝",
-      "██║░░██║██║░░░██║██║░░╚═╝█████═╝░  ██║╚█████╗░██║░░░░░███████║██╔██╗██║██║░░██║░░░",
-      "██║░░██║██║░░░██║██║░░██╗██╔═██╗░  ██║░╚═══██╗██║░░░░░██╔══██║██║╚████║██║░░██║░░░",
-      "██████╔╝╚██████╔╝╚█████╔╝██║░╚██╗  ██║██████╔╝███████╗██║░░██║██║░╚███║██████╔╝██╗",
-      "╚═════╝░░╚═════╝░░╚════╝░╚═╝░░╚═╝  ╚═╝╚═════╝░╚══════╝╚═╝░░╚═╝╚═╝░░╚══╝╚═════╝░╚═╝"
-    ];
-    titleArt.forEach(line => appendLine(line));
-    appendLine("");
-    appendLine("Press Enter (or type '1') to continue...");
-    gameState = "introNamePrompt";
-    showInputArea();
-    waitForResizeThenFocus();
-  }
-
-  function startIntroName() {
-    clearScreen();
-    appendLine("You want to become a mighty pirate on The Island of Duck™.");
-    appendLine("");
-    appendLine("You are here to complete the Three Legendary Quests™ that three legendary pirates have set out for you.");
-    appendLine("You have already completed two of them:");
-    appendLine("- Quest of the Duckbeard's Treasure™ (Treasure-huntery),");
-    appendLine("- Quest of the Golden Egg™ (Thieving).");
-    appendLine("");
-    appendLine("Now, you must complete the Quest of the Insult Sword Fighting™ (Insulting).");
-    appendLine("The Three Legendary Quests™ are the only way to become a true pirate, and to be able to sail the Seven C's™.");
-    appendLine("");
-    appendLine("The first quest required finding the buried treasure of Captain Duckbeard.");
-    appendLine("The second, stealing the Golden Egg™ from Governor Duckley.");
-    appendLine("The last quest, is to beat The SwordMaster™ in an insult sword fight.");
-    appendLine("");
-    appendLine("Your training with Captain Quackbeard has been going well.");
-    appendLine("He has advised you to fight some local pirates to get some practice.");
-    appendLine("The key to winning a sword fight, he says, is to insult your opponent.");
-    appendLine("You must learn the insults and their retorts so you can defeat the SwordMaster™.");
-    appendLine("");
-    appendLine("Good luck, pirate!");
-    appendLine("");
-    appendLine("Please type your name, then hit Enter to continue.");
-    appendLine("");
-    appendLine("> ");
-    gameState = "introName";
-    showInputArea();
-    waitForResizeThenFocus();
-  }
-
-  function handleIntroName(input) {
-    if (!input) {
-      appendLine("");
-      appendLine("Type your name to start.");
-      appendLine("");
-      appendLine("> ");
-      return;
+  // Weighted random choice from PIRATE_TIERS based on “weight” field.
+  function choosePirateTier() {
+    const totalWeight = PIRATE_TIERS.reduce((sum, p) => sum + p.weight, 0);
+    let pick = Math.random() * totalWeight;
+    for (let p of PIRATE_TIERS) {
+      if (pick < p.weight) return p;
+      pick -= p.weight;
     }
-    playerName = input;
-    clearScreen();
-    appendLine(`Welcome, ${playerName}!`);
-    appendLine("");
-    setTimeout(startRegularDuel, 1000);
+    // Fallback, though we should never reach here
+    return PIRATE_TIERS[0];
   }
 
-  function startRegularDuel() {
-    // Choose a random pirate tier
-    currentTier = chooseRandomPirateTier();
-    pirateLives = 3;
-    playerLives = 3;
-    usedInsultsThisPirate = [];
-    clearScreen();
-    appendLine(`A ${currentTier.name} approaches, ${playerName}!`);
-    appendLine(`\n"My name is ${playerName}. Prepare to die!"`);
-    setTimeout(() => {
-      // Player starts first
-      beginPlayerTurn();
-    }, 1000);
+  // Show a prompt that only expects the user to press Enter (or click “Continue”).
+  function expectEnter(callback) {
+    inputArea.innerHTML = "";
+    // No text input; show a single “Continue” button.
+    let btn = document.createElement("button");
+    btn.innerText = "Continue";
+    btn.onclick = () => {
+      callback();
+    };
+    inputArea.appendChild(btn);
   }
 
-  function beginPirateTurn() {
-    clearScreen();
-    displayHearts("You", playerLives);
-    displayHearts("Pirate", pirateLives);
-    appendLine("");
+  // Show a text‐input field + “Submit” button. After user types, call onSubmit(value).
+  function expectTextInput(placeholderText, onSubmit) {
+    inputArea.innerHTML = "";
+    textInput = document.createElement("input");
+    textInput.type = "text";
+    textInput.id = "text-input";
+    textInput.placeholder = placeholderText;
+    textInput.autofocus = true;
+    inputArea.appendChild(textInput);
 
-    // Pirate picks a random insult index < tierMax
-    const idx = getRandomInt(currentTier.maxIndex);
-    const [insult, correctRetort] = AVAILABLE_INSULTS[idx];
-    currentInsult = insult;
-    currentCorrectRetort = correctRetort;
+    submitButton = document.createElement("button");
+    submitButton.innerText = "Submit";
+    submitButton.onclick = () => {
+      let val = textInput.value.trim();
+      onSubmit(val);
+    };
+    inputArea.appendChild(submitButton);
 
-    // Pirate’s insult is always learned
-    if (!insultsLearned.includes(insult)) {
-      insultsLearned.push(insult);
-    }
-
-    appendLine(`Pirate: "${insult}"`);
-    appendLine("");
-
-    // Show retort options
-    retortsLearned.forEach((r, i) => {
-      appendLine(`  ${i + 1}. ${r}`);
+    textInput.addEventListener("keyup", (ev) => {
+      if (ev.key === "Enter") {
+        submitButton.click();
+      }
     });
-    const giveUpIndex = retortsLearned.length + 1;
-    appendLine(`  ${giveUpIndex}. I give up! You win!`);
-    appendLine("");
-    appendLine("Your retort (enter number):");
-    appendLine("");
-    appendLine("> ");
-
-    gameState = "pirateResponse";
-    showInputArea();
-    waitForResizeThenFocus();
   }
 
-  function handlePirateResponse(input) {
-    hideInputArea();
-    const n = parseInt(input, 10);
-    const giveUpIndex = retortsLearned.length + 1;
-
-    if (isNaN(n) || n < 1 || n > giveUpIndex) {
-      // Invalid choice: treat as wrong retort
-      appendLine("");
-      appendLine("Wrong! You lose a heart.");
-      playerLives--;
-      if (playerLives <= 0) {
-        return finishDuel(false);
-      }
-      setTimeout(beginPirateTurn, 1000);
-      return;
-    }
-
-    if (n === giveUpIndex) {
-      // Player gives up
-      appendLine("");
-      appendLine("You gave up! The pirate wins.");
-      playerLives = 0;
-      return finishDuel(false);
-    }
-
-    // Check if chosen retort is correct
-    const chosenRetort = retortsLearned[n - 1];
-    if (chosenRetort === currentCorrectRetort) {
-      appendLine("");
-      appendLine("Correct! Pirate loses a heart.");
-      pirateLives--;
-      if (!retortsLearned.includes(currentCorrectRetort)) {
-        retortsLearned.push(currentCorrectRetort);
-      }
-      if (pirateLives <= 0) {
-        return finishDuel(true);
-      }
-      setTimeout(beginPlayerTurn, 1000);
-    } else {
-      appendLine("");
-      appendLine("Wrong! You lose a heart.");
-      playerLives--;
-      if (playerLives <= 0) {
-        return finishDuel(false);
-      }
-      setTimeout(beginPirateTurn, 1000);
-    }
-  }
-
-  function beginPlayerTurn() {
-    clearScreen();
-    displayHearts("You", playerLives);
-    displayHearts("Pirate", pirateLives);
-    appendLine("");
-
-    // Build available insults: learned minus already used in this duel
-    const learnedOptions = insultsLearned.filter(ins => !usedInsultsThisPirate.includes(ins));
-    currentPlayerInsultOptions = [...learnedOptions, ...THROWAWAY_INSULTS];
-
-    currentPlayerInsultOptions.forEach((ins, i) => {
-      appendLine(`  ${i + 1}. ${ins}`);
+  // Present a list of string‐choices. onChoice(index) will be called (zero‐based) when clicked.
+  function showChoices(options, onChoice) {
+    inputArea.innerHTML = "";
+    let ul = document.createElement("ul");
+    ul.className = "choice-list";
+    options.forEach((opt, idx) => {
+      let li = document.createElement("li");
+      let btn = document.createElement("button");
+      btn.className = "choice-button";
+      btn.innerText = `${idx+1}) ${opt}`;
+      btn.onclick = () => { onChoice(idx); };
+      li.appendChild(btn);
+      ul.appendChild(li);
     });
-    const giveUpIndex = currentPlayerInsultOptions.length + 1;
-    appendLine(`  ${giveUpIndex}. I give up! You win!`);
-    appendLine("");
-    appendLine("Your insult (enter number):");
-    appendLine("");
-    appendLine("> ");
-
-    gameState = "playerResponse";
-    showInputArea();
-    waitForResizeThenFocus();
+    gameContainer.appendChild(ul);
+    inputArea.appendChild(ul);
   }
 
-  function handlePlayerResponse(input) {
-    hideInputArea();
-    const n = parseInt(input, 10);
-    const giveUpIndex = currentPlayerInsultOptions.length + 1;
-
-    if (isNaN(n) || n < 1 || n > giveUpIndex) {
-      // Invalid choice: lose a heart
-      appendLine("");
-      appendLine("Invalid choice! You lose a heart.");
-      playerLives--;
-      if (playerLives <= 0) {
-        return finishDuel(false);
-      }
-      setTimeout(beginPirateTurn, 1000);
-      return;
-    }
-
-    if (n === giveUpIndex) {
-      // Player gives up
-      appendLine("");
-      appendLine("You gave up! The pirate wins.");
-      playerLives = 0;
-      return finishDuel(false);
-    }
-
-    const chosenInsult = currentPlayerInsultOptions[n - 1];
-    appendLine("");
-    appendLine(`You: "${chosenInsult}"`);
-
-    // If it's a learned insult, mark as used
-    if (insultsLearned.includes(chosenInsult)) {
-      usedInsultsThisPirate.push(chosenInsult);
-    }
-
-    // If throwaway insult
-    if (THROWAWAY_INSULTS.includes(chosenInsult)) {
-      const fallback = getFallbackRetort();
-      appendLine(`Pirate: "${fallback}"`);
-      setTimeout(beginPirateTurn, 1000);
-      return;
-    }
-
-    // Otherwise, find its correct retort and index in AVAILABLE_INSULTS
-    const pairIndex = AVAILABLE_INSULTS.findIndex(pair => pair[0] === chosenInsult);
-    if (pairIndex === -1) {
-      // Should never happen if data is consistent
-      const fallback = getFallbackRetort();
-      appendLine(`Pirate: "${fallback}"`);
-      setTimeout(beginPirateTurn, 1000);
-      return;
-    }
-
-    const correctRetort = AVAILABLE_INSULTS[pairIndex][1];
-
-    // Does the pirate know this retort? (index < tierMax)
-    if (pairIndex < currentTier.maxIndex) {
-      // Pirate knows how to respond
-      appendLine(`Pirate: "${correctRetort}"`);
-      appendLine("");
-      appendLine("You lose a heart.");
-      playerLives--;
-      // Pirate “learns” this retort if not already learned
-      if (!retortsLearned.includes(correctRetort)) {
-        retortsLearned.push(correctRetort);
-      }
-      if (playerLives <= 0) {
-        return finishDuel(false);
-      }
-      setTimeout(beginPirateTurn, 1000);
-    } else {
-      // Pirate does not know retort
-      const fallback = getFallbackRetort();
-      appendLine(`Pirate: "${fallback}"`);
-      appendLine("");
-      appendLine("Pirate loses a heart.");
-      pirateLives--;
-      if (pirateLives <= 0) {
-        return finishDuel(true);
-      }
-      setTimeout(beginPlayerTurn, 1000);
-    }
-  }
-
-  function finishDuel(playerWon) {
+  // Show a “game-over” screen.
+  function gameOver(message) {
     clearScreen();
-    if (playerWon) {
-      appendLine('Pirate: "I give up! You win!"');
-    } else {
-      appendLine(`[ ${playerName} ]: "I give up! You win!"`);
-    }
-    appendLine("");
-    const learnedRatio = insultsLearned.length / AVAILABLE_INSULTS.length;
-
-    appendLine(`Insults known: ${insultsLearned.length}/${AVAILABLE_INSULTS.length}`);
-    appendLine(`Retorts known: ${retortsLearned.length}/${AVAILABLE_INSULTS.length}`);
-    appendLine("");
-
-    if (playerWon && learnedRatio > 0.75) {
-      appendLine("Wow! You are good enough to defeat the SwordMaster!");
-      appendLine("");
-      appendLine("Face the SwordMaster now? (type 'y' for yes, anything else to continue facing pirates)");
-      appendLine("");
-      appendLine("> ");
-      gameState = "postDuelChoice";
-      showInputArea();
-      waitForResizeThenFocus();
-    } else {
-      appendLine("Press Enter to face another pirate...");
-      appendLine("");
-      appendLine("> ");
-      gameState = "continuePirates";
-      showInputArea();
-      waitForResizeThenFocus();
-    }
+    println(message);
+    println("\n--- GAME OVER ---");
+    println("Refresh page to play again.");
+    inputArea.innerHTML = "";
   }
 
-  function handlePostDuelChoice(input) {
-    hideInputArea();
-    if (input.trim().toLowerCase() === "y") {
-      startSwordMasterChallenge();
-    } else {
-      startRegularDuel();
-    }
-  }
+  // ─── PHASE 1: TITLE SCREEN & INTRO ───────────────────────────────────────────
 
-  function handleContinuePirates() {
-    hideInputArea();
-    startRegularDuel();
-  }
-
-  // ----------------------------
-  // SwordMaster™ challenge
-  // ----------------------------
-  function startSwordMasterChallenge() {
+  function showTitleScreen() {
+    state.phase = "title";
     clearScreen();
-    appendLine("You wish to challenge the legendary SwordMaster™, the ultimate test of your insult sword fighting skills.");
-    appendLine("");
-    appendLine("You have faced countless pirates, and now you stand at the threshold of destiny.");
-    appendLine("The SwordMaster™ resides in a secluded glade deep within the forest, where only those truly versed in wit may pass.");
-    appendLine("");
-    appendLine("Press Enter to continue...");
-    appendLine("");
-    appendLine("> ");
-    gameState = "swordmasterIntro";
-    showInputArea();
-    waitForResizeThenFocus();
+
+    // ASCII‐style banner (abbreviated for brevity). You can inject the full ASCII if desired.
+    const asciiBanner = `
+████████╗██╗  ██╗███████╗  ██████╗███████╗ █████╗ ██████╗ ███████╗████████╗  █████╗ ███████╗
+╚══██╔══╝██║  ██║██╔════╝  ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔════╝╚══██╔══╝  ██╔══██╗██╔════╝
+   ██║   ███████║█████╗    ╚█████╗ █████╗  ███████║██║  ██║█████╗     ██║     ██║  ██║█████╗  
+   ██║   ██╔══██║██╔══╝    ╚═══██╗██╔══╝  ██╔══██║██║  ██║██╔══╝     ██║     ██║  ██║██╔══╝  
+   ██║   ██║  ██║███████╗  ██████╔╝███████╗██║  ██║██████╔╝███████╗   ██║     ╚█████╔╝██║     
+   ╚═╝   ╚═╝  ╚═╝╚══════╝  ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═════╝ ╚══════╝   ╚═╝      ╚════╝ ╚═╝     
+
+         Deep In The Atlantic Ocean...
+                The Island of Duck™
+    
+       Created and Designed by Alejandro Anguera de la Rosa
+                  Version 0.8.0
+    `;
+    showBlockOfText(asciiBanner + "\nPress “Continue” to begin.\n");
+    expectEnter(showIntro);
   }
 
-  function beginSwordMasterFight() {
+  function showIntro() {
+    state.phase = "intro";
     clearScreen();
-    currentPirateRound = 0;
-    proceedSwordMasterRound();
-  }
+    let introText = `
+█ █▄░█ ▀█▀ █▀█ █▀█ █▀▄ █░█ █▀▀ ▀█▀ █ █▀█ █▄░█
+█ █░▀█ ░█░ █▀▄ █▄█ █▄▀ █▄█ █▄▄ ░█░ █ █▄█ █░▀█
 
-  function proceedSwordMasterRound() {
-    if (currentPirateRound >= SWORDMASTER_INSULTS.length) {
-      // Victory over SwordMaster
-      clearScreen();
-      appendLine(`Victory! You have defeated the SwordMaster™ in an insult sword fight.`);
-      appendLine("");
-      appendLine(`The SwordMaster™ nods in respect and says, "Well it seems I underestimated you, ${playerName}."`);
-      appendLine(`"Anyway, you'll want to show this to those three pirates to prove your win."`);
-      appendLine("");
-      appendLine(`You are handed a shirt that reads "I beat the SwordMaster™ and all I got was this lousy t-shirt".`);
-      appendLine("");
-      appendLine("Press Enter to exit the game...");
-      appendLine("");
-      appendLine("> ");
-      gameState = "swordmasterEnd";
-      showInputArea();
-      waitForResizeThenFocus();
-      return;
-    }
+You want to become a mighty pirate on The Island of Duck™.
 
-    const [insult, correctRetort] = SWORDMASTER_INSULTS[currentPirateRound];
-    currentCorrectRetort = correctRetort;
-    clearScreen();
-    appendLine(`SwordMaster: "${insult}"`);
-    appendLine("");
-    // Show retort options
-    retortsLearned.forEach((r, i) => {
-      appendLine(`  ${i + 1}. ${r}`);
+You are here to complete the Three Legendary Quests™ that have been set out for you.
+You have already completed two of them: the Quest of the Duckbeard's Treasure™ (Treasure-huntery)
+and the Quest of the Golden Egg™ (Thieving).
+Now, you must complete the Quest of the Insult Sword Fighting™ (Insulting).
+The Three Legendary Quests™ are the only way to become a true pirate, and to be able to sail the Seven C's™.
+
+Type your name, then press “Submit” to begin your duel:
+    `;
+    showBlockOfText(introText);
+    expectTextInput("Your name…", (val) => {
+      if (!val) {
+        // Must enter a name
+        showBlockOfText("You must type a name to continue.\n\nType your name, then press “Submit”.");
+        expectTextInput("Your name…", arguments.callee);
+      } else {
+        state.playerName = val;
+        showBlockOfText(`Welcome, ${val}! Press “Continue” to begin your first duel…`);
+        expectEnter(() => {
+          startRegularDuel();
+        });
+      }
     });
-    appendLine("");
-    appendLine("Your retort (enter number):");
-    appendLine("");
-    appendLine("> ");
-    gameState = "swordmasterResponse";
-    showInputArea();
-    waitForResizeThenFocus();
   }
 
-  function handleSwordmasterResponse(input) {
-    hideInputArea();
-    const n = parseInt(input, 10);
-    if (isNaN(n) || n < 1 || n > retortsLearned.length) {
+  // ─── PHASE 2: REGULAR DUELS AGAINST PIRATES ───────────────────────────────────
+
+  async function startRegularDuel() {
+    state.phase = "regular";
+    clearScreen();
+
+    // Loop forever (or until player gives up / completes).
+    while (true) {
+      // 1) Choose a random pirate tier (weighted).
+      const tier = choosePirateTier();
+      state.currentPirateTier = tier;
+      state.pirateLives = 3;
+      state.playerLives = 3;
+      state.usedInsultsForThisPirate = [];
+      state.turn = "player";
+
+      // 2) Show a short “Get ready…” prompt:
+      showBlockOfText(`A new challenger approaches: ${tier.name}!\nPress “Continue” to face them.`);
+      await new Promise(r => expectEnter(r));
+
+      // 3) Start the turn‐based loop:
+      while (state.pirateLives > 0 && state.playerLives > 0) {
+        clearScreen();
+        // Show current life bars:
+        displayHearts("You", state.playerLives);
+        displayHearts("Pirate", state.pirateLives);
+        println("");
+
+        if (state.turn === "player") {
+          // Build list of available insults:
+          const available = [
+            ...state.insultsLearned.filter(i => !state.usedInsultsForThisPirate.includes(i)),
+            ...THROWAWAY_INSULTS
+          ];
+
+          // Display “Your turn to insult” and choices:
+          println("Your turn to insult:");
+          showChoices(available.concat(["I give up! You lose."]), (choiceIdx) => {
+            const giveUpIndex = available.length; // last index
+            if (choiceIdx === giveUpIndex) {
+              // Player gave up immediately
+              state.playerLives = 0;
+            } else {
+              const playerInsult = available[choiceIdx];
+              // If it is a “learned” insult, mark it used:
+              if (state.insultsLearned.includes(playerInsult)) {
+                state.usedInsultsForThisPirate.push(playerInsult);
+              }
+              println(`\nYou: "${playerInsult}"\n`);
+
+              // Now check if this insult is “throwaway”:
+              if (THROWAWAY_INSULTS.includes(playerInsult)) {
+                // Pirate fallback retort, no life lost by pirate:
+                const fallback = FALLBACK_RETORTS[randInt(FALLBACK_RETORTS.length)];
+                println(`Pirate: "${fallback}"`);
+                state.turn = "pirate";
+              } else {
+                // It’s a “real” insult. Look up correct retort:
+                const pair = AVAILABLE_INSULTS.find(p => p.insult === playerInsult);
+                const idxIns = AVAILABLE_INSULTS.findIndex(p => p.insult === playerInsult);
+                let correctRetort = pair ? pair.retort : null;
+
+                if (idxIns >= 0 && idxIns < tier.tierMax) {
+                  // Pirate “knows” the retort:
+                  println(`Pirate: "${correctRetort}"`);
+                  println("\nYou lose a heart.");
+                  state.playerLives -= 1;
+                  // Pirate teaches you the retort if you didn’t already have it:
+                  if (correctRetort && !state.retortsLearned.includes(correctRetort)) {
+                    state.retortsLearned.push(correctRetort);
+                  }
+                  state.turn = "pirate";
+                } else {
+                  // Pirate does NOT know the retort → fallback + pirate loses a heart:
+                  const fallback = FALLBACK_RETORTS[randInt(FALLBACK_RETORTS.length)];
+                  println(`Pirate: "${fallback}"`);
+                  println("\nPirate loses a heart.");
+                  state.pirateLives -= 1;
+                  state.turn = "player";
+                }
+              }
+            }
+            proceedAfterChoice(); // wrapper to continue the loop
+          });
+          return; // wait for choice callback to resume loop
+
+        } else {
+          // Pirate’s turn to insult:
+          const idx = randInt(tier.tierMax);
+          const pirateInsult = AVAILABLE_INSULTS[idx].insult;
+          const correctRetort = AVAILABLE_INSULTS[idx].retort;
+
+          // Pirate uses that insult:
+          println(`Pirate: "${pirateInsult}"\n`);
+          // You learn it (if you didn’t already)
+          if (!state.insultsLearned.includes(pirateInsult)) {
+            state.insultsLearned.push(pirateInsult);
+          }
+
+          // Present your known retorts:
+          if (state.retortsLearned.length === 0) {
+            // You literally know no retorts → automatic loss
+            println("You have no retorts to defend yourself!");
+            state.playerLives = 0;
+            proceedAfterChoice();
+            return;
+          }
+
+          showChoices(
+            state.retortsLearned.concat(["I give up! Pirate wins."]),
+            (choiceIdx) => {
+              const giveUpIndex = state.retortsLearned.length; 
+              if (choiceIdx === giveUpIndex) {
+                state.playerLives = 0; // gave up
+              } else {
+                const yourRetort = state.retortsLearned[choiceIdx];
+                if (yourRetort === correctRetort) {
+                  println("\nCorrect! Pirate loses a heart.");
+                  state.pirateLives -= 1;
+                  // You “learn” this retort (but you already know it).
+                } else {
+                  println("\nWrong! You lose a heart.");
+                  state.playerLives -= 1;
+                }
+                state.turn = (yourRetort === correctRetort ? "player" : "pirate");
+              }
+              proceedAfterChoice();
+            }
+          );
+          return; // wait for choice callback
+        }
+      } // end while-turn‐loop
+
+      // Once we exit that loop, either pirateLives ≤ 0 (you win) or playerLives ≤ 0 (you lost).
       clearScreen();
-      appendLine("Incorrect or invalid input! The Insult Master has bested you.");
-      appendLine("");
-      appendLine("GAME OVER");
-      appendLine("");
-      appendLine("Press Enter to exit...");
-      appendLine("");
-      appendLine("> ");
-      gameState = "swordmasterEnd";
-      showInputArea();
-      waitForResizeThenFocus();
-      return;
+      if (state.playerLives <= 0) {
+        // You lost to this pirate.
+        println(`You have been defeated by the ${tier.name}...`);
+        println("\n--- GAME OVER ---\n");
+        println("Refresh to try again.");
+        inputArea.innerHTML = "";
+        return; // end the entire game
+      } else {
+        // You defeated this pirate!
+        println(`Victory! You have defeated the ${tier.name}!`);
+        // Show how many insults/retorts you now know:
+        const knownCount = state.retortsLearned.length;
+        const totalCount = AVAILABLE_INSULTS.length;
+        println(`Retorts known: ${knownCount}/${totalCount}\n`);
+        // Check if you're ready for SwordMaster:
+        if (knownCount / totalCount > 0.75) {
+          println("You feel ready to face the SwordMaster™.");
+          showChoices(["Yes, challenge the SwordMaster™", "No, fight another pirate"], (idx) => {
+            if (idx === 0) {
+              startSwordmasterChallenge();
+            } else {
+              startRegularDuel(); // re‐enter another pirate loop
+            }
+          });
+          return;
+        } else {
+          println("Press “Continue” to face another pirate.");
+          await new Promise(r => expectEnter(r));
+          // and loop ===> next pirate
+        }
+      }
+    } // end “while(true)” loop
+  }
+
+  // Resume control after a choice‐callback. We simply restart the same turn‐loop
+  function proceedAfterChoice() {
+    // We need to call startRegularDuel's inner loop again.
+    // Easiest: just re‐invoke startRegularDuel, but we must preserve state.
+    if (state.phase === "regular") {
+      // A brief delay so that the text shows up before clearing/reprinting.
+      setTimeout(startRegularDuel.bind(null), 100);
     }
-    const chosen = retortsLearned[n - 1];
-    if (chosen !== currentCorrectRetort) {
+  }
+
+  // ─── PHASE 3: SWORDMASTER CHALLENGE ──────────────────────────────────────────
+
+  async function startSwordmasterChallenge() {
+    state.phase = "swordmaster";
+    state.swordmasterIndex = 0;
+    clearScreen();
+
+    const promptIntro = `
+You wish to challenge the legendary SwordMaster™, the ultimate test of your insult sword fighting skills.
+The SwordMaster™ resides in a secluded glade deep within the forest, where only those truly versed in wit may pass.
+
+You approach the SwordMaster™, who looks up at you and says:
+"So, you are ${state.playerName}? If you ever hope to sail the Seven C's™, you'll have to defeat me in an insult sword fight."
+
+Press “Continue” when you are ready.
+    `;
+    showBlockOfText(promptIntro);
+    await new Promise(r => expectEnter(r));
+
+    // Loop over SWORDMASTER_INSULTS sequentially:
+    while (state.swordmasterIndex < SWORDMASTER_INSULTS.length) {
       clearScreen();
-      appendLine("Incorrect! The Insult Master has bested you.");
-      appendLine("");
-      appendLine("GAME OVER");
-      appendLine("");
-      appendLine("Press Enter to exit...");
-      appendLine("");
-      appendLine("> ");
-      gameState = "swordmasterEnd";
-      showInputArea();
-      waitForResizeThenFocus();
-      return;
-    }
-    // Correct retort: proceed
-    appendLine("");
-    appendLine("Well played! You matched his insult.");
-    appendLine("");
-    currentPirateRound++;
-    setTimeout(proceedSwordMasterRound, 1000);
-  }
-
-  function endSwordmasterGame() {
-    // Simply disable input and show final message; user can close tab
-    hideInputArea();
-  }
-
-  // ----------------------------
-  // Main input handler
-  // ----------------------------
-  function handleInput() {
-    const inputVal = userInput.value.trim();
-    userInput.value = "";
-
-    switch (gameState) {
-      case "title":
-        hideInputArea();
-        startTitleScreen();
-        break;
-
-      case "introNamePrompt":
-        hideInputArea();
-        startIntroName();
-        break;
-
-      case "introName":
-        handleIntroName(inputVal);
-        break;
-
-      case "pirateResponse":
-        handlePirateResponse(inputVal);
-        break;
-
-      case "playerResponse":
-        handlePlayerResponse(inputVal);
-        break;
-
-      case "postDuelChoice":
-        handlePostDuelChoice(inputVal);
-        break;
-
-      case "continuePirates":
-        handleContinuePirates();
-        break;
-
-      case "swordmasterIntro":
-        hideInputArea();
-        beginSwordMasterFight();
-        break;
-
-      case "swordmasterResponse":
-        handleSwordmasterResponse(inputVal);
-        break;
-
-      case "swordmasterEnd":
-        endSwordmasterGame();
-        break;
-
-      default:
-        // Shouldn't reach here; fallback to hiding input
-        hideInputArea();
-        break;
+      const { insult, retort } = SWORDMASTER_INSULTS[state.swordmasterIndex];
+      println(`SwordMaster: "${insult}"\n`);
+      if (state.retortsLearned.length === 0) {
+        println("You have no retorts to defend yourself!");
+        gameOver("The Insult Master has bested you. You have no retorts left.");
+        return;
+      }
+      showChoices(
+        state.retortsLearned,
+        (choiceIdx) => {
+          const yourRet = state.retortsLearned[choiceIdx];
+          if (yourRet !== retort) {
+            clearScreen();
+            println(`\nIncorrect! The Insult Master has bested you.`);
+            println("\n--- GAME OVER ---\n");
+            inputArea.innerHTML = "";
+            return;
+          } else {
+            // Correct: move to next insult
+            println("\nWell played! You matched his insult.");
+            state.swordmasterIndex++;
+            if (state.swordmasterIndex < SWORDMASTER_INSULTS.length) {
+              showBlockOfText(`Press “Continue” for the next round against the SwordMaster™.`);
+              expectEnter(() => {
+                // recursing into the same while loop
+                setTimeout(startSwordmasterChallenge.bind(null), 100);
+              });
+            } else {
+              // All insults matched → Victory.
+              setTimeout(() => {
+                clearScreen();
+                println(`Victory! You have defeated the SwordMaster™ in an insult sword fight.`);
+                println(`\nThe SwordMaster™ nods in respect and says, "Well, it seems I underestimated you."`);
+                println(`You are handed a shirt that reads "I beat the SwordMaster™ and all I got was this lousy T-shirt."`);
+                println(`\n--- You are a true pirate now! ---\n`);
+                inputArea.innerHTML = "";
+              }, 200);
+            }
+          }
+        }
+      );
+      return; // wait for choice callback before continuing
     }
   }
 
-  // Bind click + Enter key on the submit button
-  submitBtn.addEventListener("click", handleInput);
-  userInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleInput();
-    }
-  });
+  // ─── BOOTSTRAP ONCE DOM IS READY ──────────────────────────────────────────────
 
-  // ----------------------------
-  // Kick off the game
-  // ----------------------------
-  window.addEventListener("load", () => {
-    startSplash();
+  window.addEventListener("DOMContentLoaded", () => {
+    gameContainer = document.getElementById("game-container");
+    initUI();
+    showTitleScreen();
   });
 })();
