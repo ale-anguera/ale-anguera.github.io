@@ -1,4 +1,4 @@
-/* Minimal dark theme */
+/* minimalist dark theme */
 body{
     margin:0;
     background:#121212;
@@ -6,32 +6,25 @@ body{
     font-family:Monaco, monospace;
 }
 
-/* Text console */
+/* scrolling text */
 pre#output{
     white-space:pre-wrap;
     word-break:break-word;
     line-height:1.35rem;
     padding:1rem;
-    margin:0 0 2.8rem 0;      /* leave room for prompt bar */
+    margin:0 0 3rem 0;   /* keep clear of prompt bar */
 }
 
-/* Fixed prompt bar at bottom */
+/* input bar */
 #input-wrapper{
     position:fixed;
-    left:0;
-    bottom:0;
-    width:100%;
-    padding:0.6rem 1rem;
+    left:0; bottom:0; width:100%;
     background:#121212;
-    display:flex;
-    align-items:center;
     border-top:1px solid #333;
+    padding:0.6rem 1rem;
+    display:flex; align-items:center;
 }
-
-#input-wrapper span{
-    margin-right:0.5rem;
-}
-
+#input-wrapper span{ margin-right:0.5rem; }
 #input-wrapper input{
     flex:1;
     background:#1e1e1e;

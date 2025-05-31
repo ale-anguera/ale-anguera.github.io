@@ -2,22 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>TSDI – Sword Fighting</title>
+  <title>TSDI - Sword Fighting</title>
 
-  <!-- Dark-mode look -->
   <link rel="stylesheet" href="style.css" />
-
-  <!-- Pyodide (WebAssembly CPython) -->
-  <script defer src="https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js"></script>
-
-  <!-- Main loader / autoscroll / JS↔︎Python bridge -->
   <script defer src="script.js"></script>
 </head>
 <body>
-  <!-- Streaming console output -->
+  <!-- streaming text console -->
   <pre id="output"></pre>
 
-  <!-- In-page input prompt -->
+  <!-- fixed input bar -->
   <div id="input-wrapper">
     <span>&gt; </span><input id="userInput" autocomplete="off" />
   </div>
