@@ -125,16 +125,24 @@
     textArea.scrollTop = 0;
   }
 
-  // Append a line of text (with a newline).
+  // Append a line of text (as HTML). Each call becomes a new <div>.
   function println(str = "") {
-    textArea.innerText += str + "\n";
-    // Always auto-scroll to bottom.
+    // Wrap each printed line in its own <div> so that spacing/newlines work correctly:
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = str; 
+    textArea.appendChild(wrapper);
+    // Auto‐scroll to bottom
     textArea.scrollTop = textArea.scrollHeight;
   }
 
-  // Show a big block of multi‐line text at once.
+  // Show a big block of (possibly multiline) HTML text at once.
   function showBlockOfText(block) {
-    textArea.innerText = block;
+    // Convert newlines (\n) into <br> for HTML rendering:
+    const htmlified = block
+      .split("\n")
+      .map(line => line || "<br>") // if an empty line, still insert a <br>
+      .join("");
+    textArea.innerHTML = htmlified;
     textArea.scrollTop = textArea.scrollHeight;
   }
 
