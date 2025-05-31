@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Insult Sword Fighting – Browser Edition</title>
+  <title>TSDI - Sword-Fighting</title>
 
   <!-- Minimal dark theme -->
   <link rel="stylesheet" href="style.css" />
@@ -19,10 +19,10 @@
   <!-- Console-like output -->
   <pre id="output"></pre>
 
-  <!-- Shim: redirect I/O & patch os.system() -->
+  <!-- Shim: redirect I/O & patch desktop-only calls -->
   <script type="text/python">
 from browser import document, window
-import sys, os, builtins
+import sys, os, builtins, time    # time added here
 
 # ----- 1. stdout / stderr -> <pre> -----
 _out = document["output"]
@@ -43,6 +43,9 @@ def _safe_system(cmd=''):
         _out.text = ''
     return 0
 os.system = _safe_system
+
+# ----- 4. make time.sleep() a no-op -----
+time.sleep = lambda *_: None
   </script>
 
   <!-- The original Python game -->
