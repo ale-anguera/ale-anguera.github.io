@@ -32,37 +32,44 @@ def _write(data):
 sys.stdout.write = _write
 sys.stderr.write = _write
 
-# ----- 2. in‑page input (no pop‑ups) -----
-# ----- 2. in‑page input (no pop‑ups, asyncio‑driven) -----
+# ----- 2. in‑page input (blocking, Brython‑friendly) -----
 import asyncio
-from browser import html
+from browser import html, timer
 
 # create a simple “console” prompt at the bottom of the page
 _input_wrapper = html.DIV(Id="input-wrapper")
-_input_prompt  = html.SPAN("> ")
+_input_prompt  = html.SPAN("> ")
 _input_box     = html.INPUT(Id="userInput", autocomplete="off")
 _input_wrapper <= _input_prompt + _input_box
 document <= _input_wrapper
 
+# explicit event loop for blocking wait
+_loop = asyncio.new_event_loop()
+asyncio.set_event_loop(_loop)
+
 def _stdin(msg=''):
-    """Synchronously wait for user to press ENTER using asyncio."""
+    """Block (Python‑level) until user presses ENTER, without pop‑ups."""
     if msg:
         _out.text += msg
-    loop = asyncio.get_event_loop()
-    fut  = loop.create_future()
+    fut = _loop.create_future()
 
     def _on_enter(ev):
         if ev.keyCode == 13:
             val = _input_box.value
             _input_box.value = ''
-            _out.text += val + '\\n'
+            _out.text += val + '\n'
             _input_box.unbind("keydown", _on_enter)
             fut.set_result(val)
 
     _input_box.bind("keydown", _on_enter)
     _input_box.focus()
-    # This blocks the calling code but keeps the browser event loop alive
-    return loop.run_until_complete(fut)
+
+    # run loop in 50 ms slices so JS events get processed
+    while not fut.done():
+        _loop.run_until_complete(asyncio.sleep(0))
+        timer.set_timeout(lambda: None, 50)  # yield to browser
+
+    return fut.result()
 
 builtins.input = _stdin
 window.prompt = lambda msg='': _stdin(msg)
