@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>TSDI - Sword-Fighting</title>
+  <title>TSDI - Sword Fighting</title>
 
   <!-- Minimal dark theme -->
   <link rel="stylesheet" href="style.css" />
@@ -33,7 +33,9 @@ sys.stdout.write = _write
 sys.stderr.write = _write
 
 # ----- 2. in‑page input (no pop‑ups) -----
-from browser import timer, html
+# ----- 2. in‑page input (no pop‑ups, asyncio‑driven) -----
+import asyncio
+from browser import html
 
 # create a simple “console” prompt at the bottom of the page
 _input_wrapper = html.DIV(Id="input-wrapper")
@@ -42,29 +44,27 @@ _input_box     = html.INPUT(Id="userInput", autocomplete="off")
 _input_wrapper <= _input_prompt + _input_box
 document <= _input_wrapper
 
-_pending = []            # queue of lines typed by the user
-
-def _on_enter(ev):
-    if ev.keyCode == 13:
-        val = _input_box.value
-        _input_box.value = ''
-        _out.text += val + '\\n'
-        _pending.append(val)
-
-_input_box.bind("keydown", _on_enter)
-
 def _stdin(msg=''):
+    """Synchronously wait for user to press ENTER using asyncio."""
     if msg:
-        _out.text += msg          # echo prompt text
-    _input_box.focus()
-    # co‑operative wait until the user presses ENTER
-    while not _pending:
-        timer.sleep(0.05)         # yields to the browser event loop
-    return _pending.pop(0)
+        _out.text += msg
+    loop = asyncio.get_event_loop()
+    fut  = loop.create_future()
 
+    def _on_enter(ev):
+        if ev.keyCode == 13:
+            val = _input_box.value
+            _input_box.value = ''
+            _out.text += val + '\\n'
+            _input_box.unbind("keydown", _on_enter)
+            fut.set_result(val)
+
+    _input_box.bind("keydown", _on_enter)
+    _input_box.focus()
+    # This blocks the calling code but keeps the browser event loop alive
+    return loop.run_until_complete(fut)
 
 builtins.input = _stdin
-# ----- 2.5. intercept any stray window.prompt calls -----
 window.prompt = lambda msg='': _stdin(msg)
 
 # ----- 3. stub os.system('clear'/'cls') -----
