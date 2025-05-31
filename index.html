@@ -62,7 +62,10 @@ def _stdin(msg=''):
         timer.sleep(0.05)         # yields to the browser event loop
     return _pending.pop(0)
 
+
 builtins.input = _stdin
+# ----- 2.5. intercept any stray window.prompt calls -----
+window.prompt = lambda msg='': _stdin(msg)
 
 # ----- 3. stub os.system('clear'/'cls') -----
 def _safe_system(cmd=''):
