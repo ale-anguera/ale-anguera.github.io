@@ -4,55 +4,54 @@
   <meta charset="UTF-8" />
   <title>Insult Sword Fighting – Browser Edition</title>
 
-  <!-- Minimal dark theme (defined in style.css) -->
+  <!-- Minimal dark theme -->
   <link rel="stylesheet" href="style.css" />
 
   <!-- Brython runtime -->
   <script defer src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython_stdlib.js"></script>
 
-  <!-- Small helper that autoscrolls the output area -->
+  <!-- Helper that autoscrolls the output area -->
   <script defer src="script.js"></script>
 </head>
 <body onload="brython()">
 
-  <!-- Console-like output goes here -->
+  <!-- Console-like output -->
   <pre id="output"></pre>
 
-  <!-- Shim: redirect I/O and patch os.system() -->
+  <!-- Shim: redirect I/O & patch os.system() -->
   <script type="text/python">
 from browser import document, window
 import sys, os, builtins
 
-# ----- 1. redirect print() / stderr -----
-_output_area = document["output"]
-
+# ----- 1. stdout / stderr -> <pre> -----
+_out = document["output"]
 def _write(data):
-    # Ensure text; some callers pass non-str objects
-    _output_area.text += str(data)
-    # Keep the latest line visible
+    _out.text += str(data)
     window.scrollTo(0, document.body.scrollHeight)
-
 sys.stdout.write = _write
 sys.stderr.write = _write
 
-# ----- 2. make input() use a browser prompt -----
+# ----- 2. input() -> JS prompt -----
 def _prompt(msg=''):
     return window.prompt(msg)
 builtins.input = _prompt
 
-# ----- 3. stub out os.system('clear'/'cls') -----
+# ----- 3. stub os.system('clear'/'cls') -----
 def _safe_system(cmd=''):
-    # If the game tries to clear the screen, wipe the <pre> instead
     if cmd.strip() in ("clear", "cls"):
-        _output_area.text = ''
-    # Return 0 so the program thinks the command succeeded
+        _out.text = ''
     return 0
-
 os.system = _safe_system
   </script>
 
-  <!-- Your original Python game logic -->
+  <!-- The original Python game -->
   <script type="text/python" src="insultFightingNew.py"></script>
+
+  <!-- Starter: import the module and launch the game -->
+  <script type="text/python">
+import insultFightingNew as game
+game.load()
+  </script>
 </body>
 </html>
