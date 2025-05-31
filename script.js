@@ -1,561 +1,693 @@
-/*************************************************************
- * Global Game State
- *************************************************************/
-let winningScore = 10000;  // default
-let partialSelectionEnabled = false;
+/* script.js */
+(() => {
+  // ----------------------------
+  // Cached DOM elements
+  // ----------------------------
+  const outputEl = document.getElementById('game-output');
+  const inputArea = document.getElementById('input-area');
+  const userInput = document.getElementById('user-input');
+  const submitBtn = document.getElementById('submit-btn');
 
-// Scores
-let playerScore = 0;
-let aiScore = 0;
+  // ----------------------------
+  // Game data (porting from Python)
+  // ----------------------------
+  const AVAILABLE_INSULTS = [
+    ["You fight like a dairy farmer!", "How appropriate. You fight like a cow."],
+    ["I've heard you were a contemptible sneak!", "Too bad no one's ever heard of YOU at all."],
+    ["People fall at my feet when they see me coming!", "Even BEFORE they smell your breath?"],
+    ["I'm not going to take your insolence sitting down!", "Your hemorrhoids are flaring up again, eh?"],
+    ["There are no words for how disgusting you are.", "Yes there are. You just never learned them."],
+    ["You make me want to puke.", "You make me think somebody already did."],
+    ["My handkerchief will wipe up your blood!", "So you got that job as janitor, after all."],
+    ["I got this scar on my face during a mighty struggle!", "I hope now you've learned to stop picking your nose."],
+    ["You're no match for my brains, you poor fool.", "I'd be in real trouble if you ever used them."],
+    ["You have the manners of a beggar.", "I wanted to make sure you'd feel comfortable with me."],
+    ["I once owned a dog that was smarter than you.", "He must have taught you everything you know."],
+    ["Nobody's ever drawn blood from me and nobody ever will.", "You run THAT fast?"],
+    ["I've spoken with apes more polite than you.", "I'm glad to hear you attended your family reunion."],
+    ["Soon you'll be wearing my sword like a shish kebab!", "First you better stop waving it like a feather-duster."],
+    ["This is the END for you, you gutter-crawling cur!", "And I've got a little TIP for you, get the POINT?"]
+  ];
 
-// Round-specific
-let diceLeft = 6;
-let roundPoints = 0;
-let currentRoll = [];
-let isPlayerTurn = true; // track whose turn it is
-let rollsCount = 0;      // for AI logic
-let gameOver = false;
+  const SWORDMASTER_INSULTS = [
+    ["I've got a long, sharp lesson for you you to learn today.", "And I've got a little TIP for you. Get the POINT?"],
+    ["My tongue is sharper then any sword.", "First you’d better stop waving it like a feather-duster."],
+    ["My name is feared in every dirty corner of this island!", "So you got that job as janitor, after all."],
+    ["My wisest enemies run away at the first sight of me!", "Even BEFORE they smell your breath?"],
+    ["Only once have I met such a coward!", "He must have taught you everything you know."],
+    ["If your brother's like you, better to marry a pig.", "You make me think somebody already did."],
+    ["No one will ever catch ME fighting as badly as you do.", "You run THAT fast?"],
+    ["I will milk every drop of blood from your body!", "How appropriate. You fight like a cow."],
+    ["My last fight ended with my hands covered with blood.", "I hope now you've learned to stop picking your nose."],
+    ["I hope you have a boat ready for a quick escape.", "Why, did you want to borrow one?"],
+    ["My sword is famous all over the Caribbean!", "Too bad no one's ever heard of YOU at all."],
+    ["I've got the courage and skill of a master swordsman!", "I'd be in real trouble if you ever used them."],
+    ["Every word you say to me is stupid.", "I wanted to make sure you'd feel comfortable with me."],
+    ["You are a pain in the backside, sir!", "Your hemorrhoids are flaring up again, eh?"],
+    ["There are no clever moves that can help you now.", "Yes, there are. You just never learned them."],
+    ["Now I know what filth and stupidity really are.", "I'm glad to hear you attended your family reunion."],
+    ["I usually see people like you passed-out on tavern floors.", "Even BEFORE they smell your breath?"]
+  ];
 
-/*************************************************************
- * Start / Difficulty Selection
- *************************************************************/
-function setDifficulty(mode) {
-  // Hide start screen, show game screen
-  document.getElementById("start-screen").style.display = "none";
-  document.getElementById("game-screen").style.display = "block";
+  const THROWAWAY_INSULTS = [
+    "Boy are you ugly!",
+    "What an idiot",
+    "You call yourself a pirate!"
+  ];
 
-  // Check for plus
-  if (mode.endsWith("+")) {
-    partialSelectionEnabled = true;
-    mode = mode.slice(0, -1); // remove trailing '+'
+  // Learned insults & retorts; persist across fights
+  let insultsLearned = [
+    "You fight like a dairy farmer!",
+    "Soon you'll be wearing my sword like a shish kebab!"
+  ];
+  let retortsLearned = [
+    "How appropriate. You fight like a cow.",
+    "First you better stop waving it like a feather-duster."
+  ];
+
+  // Pirate tiers & weights (to mimic random.choices)
+  const PIRATE_TIERS = [
+    { name: "Scurvy Pirate",     maxIndex: 4,  weight: 5 },
+    { name: "Stinking Pirate",    maxIndex: 7,  weight: 4 },
+    { name: "Ugly Pirate",        maxIndex: 9,  weight: 3 },
+    { name: "Intimidating Pirate",maxIndex: 12, weight: 2 },
+    { name: "Dangerous Pirate",   maxIndex: AVAILABLE_INSULTS.length, weight: 1 }
+  ];
+
+  // ----------------------------
+  // State variables
+  // ----------------------------
+  let gameState = "splash";      // splash → title → introName → regularDuel → pirateResponse → playerResponse → postDuelChoice → swordmasterResponse → swordmasterNext
+  let playerName = "";
+  let currentTier = null;        // chosen pirate tier object
+  let pirateLives = 0;
+  let playerLives = 0;
+  let usedInsultsThisPirate = [];
+  let currentInsult = "";
+  let currentCorrectRetort = "";
+  let currentPlayerInsultOptions = []; // array of strings for player turn
+  let currentPirateRound = 0;    // index into SWORDMASTER_INSULTS during swordmaster challenge
+
+  // ----------------------------
+  // Utility functions
+  // ----------------------------
+
+  function clearScreen() {
+    outputEl.textContent = "";
   }
 
-  // Set winningScore
-  switch (mode.toLowerCase()) {
-    case "e":
-      winningScore = 1500;
-      break;
-    case "m":
-      winningScore = 3000;
-      break;
-    case "h":
-      winningScore = 5000;
-      break;
-    case "he":
-      winningScore = 10000;
-      break;
-    default:
-      // if invalid, default to 10000
-      winningScore = 10000;
-      partialSelectionEnabled = false;
+  function appendLine(text = "") {
+    outputEl.textContent += text + "\n";
+    // Auto-scroll to bottom
+    outputEl.scrollTop = outputEl.scrollHeight;
   }
 
-  // Start the first turn
-  updateScoreboard();
-  logMessage("Welcome to Farkle in the browser!");
-  logMessage(`You must reach ${winningScore} to win.`);
-  logMessage(partialSelectionEnabled
-    ? "Partial selection (plus) mode is enabled."
-    : "Classic mode: entire roll is auto-scored each time."
-  );
-  logMessage("Your turn! Click Roll or Bank (or type R/B) to begin...");
-}
-
-/*************************************************************
- * Utility: Log Messages to #game-log
- *************************************************************/
-function logMessage(msg) {
-  let logDiv = document.getElementById("game-log");
-  logDiv.innerHTML += msg + "<br/>";
-  logDiv.scrollTop = logDiv.scrollHeight; // auto-scroll to bottom
-}
-
-/*************************************************************
- * Update Scoreboard
- *************************************************************/
-function updateScoreboard() {
-  let sb = document.getElementById("scoreboard");
-  sb.innerHTML = `
-    <b>Goal:</b> ${winningScore} &nbsp; | &nbsp;
-    <b>Scores:</b> You: ${playerScore} &nbsp; | &nbsp; AI: ${aiScore}
-    <br/>
-    <b>Current Round:</b> ${roundPoints} 
-    (${isPlayerTurn ? "You" : "AI"})
-  `;
-}
-
-/*************************************************************
- * Dice Rolling & ASCII
- *************************************************************/
-function rollDice(n) {
-  let result = [];
-  for (let i = 0; i < n; i++) {
-    result.push(Math.floor(Math.random() * 6) + 1);
+  function showInputArea() {
+    inputArea.style.display = "flex";
+    userInput.focus();
   }
-  return result;
-}
 
-const DICE_FACES = {
-  1: [
-    "+-------+",
-    "|       |",
-    "|   o   |",
-    "|       |",
-    "+-------+"
-  ],
-  2: [
-    "+-------+",
-    "| o     |",
-    "|       |",
-    "|     o |",
-    "+-------+"
-  ],
-  3: [
-    "+-------+",
-    "| o     |",
-    "|   o   |",
-    "|     o |",
-    "+-------+"
-  ],
-  4: [
-    "+-------+",
-    "| o   o |",
-    "|       |",
-    "| o   o |",
-    "+-------+"
-  ],
-  5: [
-    "+-------+",
-    "| o   o |",
-    "|   o   |",
-    "| o   o |",
-    "+-------+"
-  ],
-  6: [
-    "+-------+",
-    "| o   o |",
-    "| o   o |",
-    "| o   o |",
-    "+-------+"
-  ],
-};
-
-function diceToAscii(dice) {
-  // Build up lines for each row
-  let lines = ["", "", "", "", "", ""]; // 5 for the face + 1 for indices
-  for (let row = 0; row < 5; row++) {
-    let rowParts = [];
-    for (let d of dice) {
-      rowParts.push(DICE_FACES[d][row]);
-    }
-    lines[row] = rowParts.join("  ");
+  function hideInputArea() {
+    inputArea.style.display = "none";
+    userInput.value = "";
   }
-  // index line
-  let idxParts = [];
-  for (let i = 0; i < dice.length; i++) {
-    idxParts.push(`   (${i + 1})    `);
+
+  function waitForResizeThenFocus() {
+    // In case the DOM reflow is needed
+    setTimeout(() => userInput.focus(), 50);
   }
-  lines[5] = idxParts.join(" ");
 
-  return lines.join("\n");
-}
-
-/*************************************************************
- * Scoring Logic
- *************************************************************/
-function scoreRoll(dice) {
-  // Returns [points, usedIndicesArray]
-  // Mirror the Python logic.
-
-  // Count occurrences
-  let counts = {};
-  for (let d of dice) {
-    counts[d] = (counts[d] || 0) + 1;
+  function displayHearts(label, lives) {
+    let hearts = "♥︎".repeat(lives) + "♡".repeat(3 - lives);
+    appendLine(`${label}: ${hearts}`);
   }
-  let usedIndices = [];
-  let totalPoints = 0;
 
-  // Helper to remove a certain number of 'value' from 'dice' + 'counts'
-  function removeValue(value, countToRemove) {
-    let removed = 0;
-    for (let i = 0; i < dice.length; i++) {
-      if (removed >= countToRemove) break;
-      if (dice[i] === value && !usedIndices.includes(i)) {
-        usedIndices.push(i);
-        removed++;
+  function chooseRandomPirateTier() {
+    // Weighted random selection from PIRATE_TIERS
+    let totalWeight = PIRATE_TIERS.reduce((sum, t) => sum + t.weight, 0);
+    let pick = Math.random() * totalWeight;
+    let cum = 0;
+    for (let tier of PIRATE_TIERS) {
+      cum += tier.weight;
+      if (pick <= cum) {
+        return tier;
       }
     }
-    counts[value] -= countToRemove;
-    if (counts[value] <= 0) {
-      delete counts[value];
-    }
+    return PIRATE_TIERS[PIRATE_TIERS.length - 1];
   }
 
-  // Check 6-dice combos
-  let totalDice = dice.length;
-  if (totalDice === 6) {
-    // 1) AAABBB => two faces each count=3 => 2500
-    if (Object.keys(counts).length === 2) {
-      let allVals = Object.values(counts);
-      if (allVals[0] === 3 && allVals[1] === 3) {
-        // All 6 used
-        return [2500, dice.map((_, i) => i)];
-      }
-      // 2) AAAABB => [2,4] => 1500
-      let sortedCounts = allVals.sort((a, b) => a - b);
-      if (sortedCounts[0] === 2 && sortedCounts[1] === 4) {
-        return [1500, dice.map((_, i) => i)];
-      }
-    }
-    // 3) AABBCC => three distinct pairs => 1500
-    if (Object.keys(counts).length === 3) {
-      let allVals = Object.values(counts);
-      if (allVals[0] === 2 && allVals[1] === 2 && allVals[2] === 2) {
-        return [1500, dice.map((_, i) => i)];
-      }
-    }
+  function getRandomInt(max) {
+    return Math.floor(Math.random() * max);
   }
 
-  // Otherwise, standard combos
-  function canRemoveFullStraight(c) {
-    for (let v = 1; v <= 6; v++) {
-      if (!c[v] || c[v] < 1) return false;
-    }
-    return true;
-  }
-  function canRemove2to6(c) {
-    for (let v = 2; v <= 6; v++) {
-      if (!c[v] || c[v] < 1) return false;
-    }
-    return true;
-  }
-  function canRemove1to5(c) {
-    for (let v = 1; v <= 5; v++) {
-      if (!c[v] || c[v] < 1) return false;
-    }
-    return true;
+  function getFallbackRetort() {
+    const FALLBACKS = [
+      "Oh yeah?",
+      "I'm shaking, I'm shaking.",
+      "I am rubber, you are glue."
+    ];
+    return FALLBACKS[getRandomInt(FALLBACKS.length)];
   }
 
-  // 1) Remove straights repeatedly
-  while (true) {
-    if (canRemoveFullStraight(counts)) {
-      totalPoints += 1500;
-      for (let v = 1; v <= 6; v++) removeValue(v, 1);
-    } else if (canRemove2to6(counts)) {
-      totalPoints += 750;
-      for (let v = 2; v <= 6; v++) removeValue(v, 1);
-    } else if (canRemove1to5(counts)) {
-      totalPoints += 500;
-      for (let v = 1; v <= 5; v++) removeValue(v, 1);
-    } else {
-      break;
-    }
+  function promptText(textToShow, nextState) {
+    clearScreen();
+    appendLine(textToShow);
+    appendLine("");
+    appendLine("> ");
+    gameState = nextState;
+    showInputArea();
+    waitForResizeThenFocus();
   }
 
-  // 2) Triples / more
-  const tripleValues = {
-    1: 1000,
-    2: 200,
-    3: 300,
-    4: 400,
-    5: 500,
-    6: 600
-  };
-  for (let face = 1; face <= 6; face++) {
-    if (counts[face] >= 3) {
-      let base = tripleValues[face];
-      let extra = counts[face] - 3; 
-      // doubling for each extra die
-      // 4-of-a-kind => base * 2
-      // 5-of-a-kind => base * 4
-      // 6-of-a-kind => base * 8
-      let comboPts = base * Math.pow(2, extra);
-      totalPoints += comboPts;
-      removeValue(face, counts[face]);
-    }
+  // ----------------------------
+  // Game flow functions
+  // ----------------------------
+
+  function startSplash() {
+    clearScreen();
+    appendLine("        ----------------------------");
+    appendLine("");
+    appendLine("        Deep In The Atlantic Ocean...");
+    appendLine("");
+    appendLine("        The Island of Duck™");
+    appendLine("");
+    appendLine("        ----------------------------");
+    appendLine("");
+    appendLine("   Created and Designed by Alejandro Anguera de la Rosa");
+    appendLine("              Version 0.8.0");
+    appendLine("");
+    appendLine("");
+    appendLine("     Press Enter to start...");
+    appendLine("");
+    gameState = "title";
+    showInputArea();
+    waitForResizeThenFocus();
   }
 
-  // 3) Singles for 1 or 5
-  for (let face of [1, 5]) {
-    if (counts[face] > 0) {
-      let singlePts = (face === 1) ? 100 : 50;
-      totalPoints += singlePts * counts[face];
-      removeValue(face, counts[face]);
-    }
+  function startTitleScreen() {
+    clearScreen();
+    const titleArt = [
+      "████████╗██╗░░██╗███████╗  ░██████╗███████╗░█████╗░██████╗░███████╗████████╗  ░█████╗░███████╗",
+      "╚══██╔══╝██║░░██║██╔════╝  ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔════╝╚══██╔══╝  ██╔══██╗██╔════╝",
+      "░░░██║░░░███████║█████╗░░  ╚█████╗░█████╗░░██║░░╚═╝██████╔╝█████╗░░░░░██║░░░  ██║░░██║█████╗░░",
+      "░░░██║░░░██╔══██║██╔══╝░░  ░╚═══██╗██╔══╝░░██║░░██╗██╔══██╗██╔══╝░░░░░██║░░░  ██║░░██║██╔══╝░░",
+      "░░░██║░░░██║░░██║███████╗  ██████╔╝███████╗╚█████╔╝██║░░██║███████╗░░░██║░░░  ╚█████╔╝██║░░░░░",
+      "░░░╚═╝░░░╚═╝░░╚═╝╚══════╝  ╚═════╝░╚══════╝░╚════╝░╚═╝░░╚═╝╚══════╝░░░╚═╝░░░  ░╚════╝░╚═╝░░░░░",
+      "",
+      "██████╗░██╗░░░██╗░█████╗░██╗░░██╗  ██╗░██████╗██╗░░░░░░█████╗░███╗░░██╗██████╗░██╗™",
+      "██╔══██╗██║░░░██║██╔══██╗██║░██╔╝  ██║██╔════╝██║░░░░░██╔══██╗████╗░██║██╔══██╗╚═╝",
+      "██║░░██║██║░░░██║██║░░╚═╝█████═╝░  ██║╚█████╗░██║░░░░░███████║██╔██╗██║██║░░██║░░░",
+      "██║░░██║██║░░░██║██║░░██╗██╔═██╗░  ██║░╚═══██╗██║░░░░░██╔══██║██║╚████║██║░░██║░░░",
+      "██████╔╝╚██████╔╝╚█████╔╝██║░╚██╗  ██║██████╔╝███████╗██║░░██║██║░╚███║██████╔╝██╗",
+      "╚═════╝░░╚═════╝░░╚════╝░╚═╝░░╚═╝  ╚═╝╚═════╝░╚══════╝╚═╝░░╚═╝╚═╝░░╚══╝╚═════╝░╚═╝"
+    ];
+    titleArt.forEach(line => appendLine(line));
+    appendLine("");
+    appendLine("Press Enter (or type '1') to continue...");
+    gameState = "introNamePrompt";
+    showInputArea();
+    waitForResizeThenFocus();
   }
 
-  return [totalPoints, usedIndices];
-}
-
-function getBestScoringText(dice) {
-  let [pts, _] = scoreRoll(dice);
-  return pts === 0
-    ? "No scoring dice. (0 points)"
-    : `This roll is worth ${pts} points in total.`;
-}
-
-/*************************************************************
- * Player Turn & AI Turn
- * We emulate the same approach from Python but event-driven.
- *************************************************************/
-
-// Called when user clicks "Roll" or types "R"
-function handleRollClick() {
-  if (gameOver) return;
-  if (!isPlayerTurn) return;
-
-  // If partial selection is OFF => we auto-score each roll
-  if (!partialSelectionEnabled) {
-    doPlayerRollClassic();
-  } else {
-    doPlayerRollPlusMode();
-  }
-}
-
-// Called when user clicks "Bank" or types "B"
-function handleBankClick() {
-  if (gameOver) return;
-  if (!isPlayerTurn) return;
-
-  // Bank
-  playerScore += roundPoints;
-  logMessage(`You banked ${roundPoints} points!`);
-  roundPoints = 0;
-  diceLeft = 6;
-  currentRoll = [];
-  updateScoreboard();
-
-  // Check for win
-  if (playerScore >= winningScore) {
-    logMessage(`Congratulations! You reached ${winningScore} and won!`);
-    gameOver = true;
-    return;
+  function startIntroName() {
+    clearScreen();
+    appendLine("You want to become a mighty pirate on The Island of Duck™.");
+    appendLine("");
+    appendLine("You are here to complete the Three Legendary Quests™ that three legendary pirates have set out for you.");
+    appendLine("You have already completed two of them:");
+    appendLine("- Quest of the Duckbeard's Treasure™ (Treasure-huntery),");
+    appendLine("- Quest of the Golden Egg™ (Thieving).");
+    appendLine("");
+    appendLine("Now, you must complete the Quest of the Insult Sword Fighting™ (Insulting).");
+    appendLine("The Three Legendary Quests™ are the only way to become a true pirate, and to be able to sail the Seven C's™.");
+    appendLine("");
+    appendLine("The first quest required finding the buried treasure of Captain Duckbeard.");
+    appendLine("The second, stealing the Golden Egg™ from Governor Duckley.");
+    appendLine("The last quest, is to beat The SwordMaster™ in an insult sword fight.");
+    appendLine("");
+    appendLine("Your training with Captain Quackbeard has been going well.");
+    appendLine("He has advised you to fight some local pirates to get some practice.");
+    appendLine("The key to winning a sword fight, he says, is to insult your opponent.");
+    appendLine("You must learn the insults and their retorts so you can defeat the SwordMaster™.");
+    appendLine("");
+    appendLine("Good luck, pirate!");
+    appendLine("");
+    appendLine("Please type your name, then hit Enter to continue.");
+    appendLine("");
+    appendLine("> ");
+    gameState = "introName";
+    showInputArea();
+    waitForResizeThenFocus();
   }
 
-  // Switch turn to AI
-  isPlayerTurn = false;
-  rollsCount = 0;
-  aiTurn();
-}
-
-function doPlayerRollClassic() {
-  // Classic mode: each time you roll, we use diceLeft, auto-score the entire roll.
-  if (diceLeft <= 0) diceLeft = 6; // hot dice scenario
-
-  currentRoll = rollDice(diceLeft);
-  showDice(currentRoll, true);
-
-  let [points, usedIx] = scoreRoll(currentRoll);
-  if (points === 0) {
-    // bust
-    logMessage("BUST! No scoring dice. Round points lost.");
-    roundPoints = 0;
-    diceLeft = 6;
-    currentRoll = [];
-    updateScoreboard();
-    // End turn => AI
-    isPlayerTurn = false;
-    setTimeout(aiTurn, 1500);
-  } else {
-    roundPoints += points;
-    diceLeft -= usedIx.length;
-    if (diceLeft <= 0) {
-      // hot dice
-      diceLeft = 6;
-      logMessage(`You scored ${points} (HOT DICE). Round total: ${roundPoints}.`);
-      logMessage("All dice used => next roll is 6 fresh dice again.");
-    } else {
-      logMessage(`You scored ${points} points. Round total: ${roundPoints}. Dice left: ${diceLeft}.`);
-    }
-    updateScoreboard();
-  }
-}
-
-function doPlayerRollPlusMode() {
-  // In plus mode, we only roll if currentRoll is empty
-  if (currentRoll.length === 0) {
-    if (diceLeft <= 0) diceLeft = 6; // hot dice
-    currentRoll = rollDice(diceLeft);
-    showDice(currentRoll, true);
-    logMessage(getBestScoringText(currentRoll));
-  } else {
-    // If currentRoll not empty, they haven't selected partial dice yet
-    logMessage("You must either Bank, or select partial dice (by typing indices), or forcibly Re-roll leftover dice by pressing R again.");
-  }
-}
-
-/*************************************************************
- * Handling partial picks
- * The user can type something in the text input, which we parse.
- *************************************************************/
-function handleUserInput(event) {
-  if (event.key === "Enter") {
-    let val = event.target.value.trim();
-    event.target.value = ""; // clear the input
-
-    // If game is over or AI's turn, ignore
-    if (gameOver || !isPlayerTurn) return;
-
-    let upVal = val.toUpperCase();
-    if (upVal === "R") {
-      handleRollClick();
-    } else if (upVal === "B") {
-      handleBankClick();
-    } else {
-      // parse dice indices
-      let parts = val.split(/\s+/).map(x => parseInt(x, 10)).filter(x => !isNaN(x));
-      if (parts.length === 0) {
-        logMessage("Invalid input. Enter R, B, or dice indices (like '1 3').");
-        return;
-      }
-      // partial pick
-      doPartialPick(parts);
-    }
-  }
-}
-
-function doPartialPick(selectedIndices) {
-  // Only valid in partial selection mode
-  if (!partialSelectionEnabled) {
-    logMessage("You're in classic mode. Cannot pick partial dice.");
-    return;
-  }
-  if (currentRoll.length === 0) {
-    logMessage("No current roll. Click Roll first.");
-    return;
-  }
-
-  // Validate
-  for (let s of selectedIndices) {
-    if (s < 1 || s > currentRoll.length) {
-      logMessage("Invalid dice indices. Must be within 1..(length of current roll).");
+  function handleIntroName(input) {
+    if (!input) {
+      appendLine("");
+      appendLine("Type your name to start.");
+      appendLine("");
+      appendLine("> ");
       return;
     }
+    playerName = input;
+    clearScreen();
+    appendLine(`Welcome, ${playerName}!`);
+    appendLine("");
+    setTimeout(startRegularDuel, 1000);
   }
 
-  // Gather the chosen dice
-  let keptDice = selectedIndices.map(i => currentRoll[i - 1]);
-  let [pts, _] = scoreRoll(keptDice);
-  if (pts === 0) {
-    // bust
-    logMessage("BUST! You selected dice that yield 0 points. Round points lost.");
-    roundPoints = 0;
-    diceLeft = 6;
-    currentRoll = [];
-    updateScoreboard();
-    // end turn => AI
-    isPlayerTurn = false;
-    setTimeout(aiTurn, 1500);
-  } else {
-    roundPoints += pts;
-    // Remove those dice from currentRoll
-    for (let val of keptDice) {
-      let idx = currentRoll.indexOf(val);
-      if (idx >= 0) currentRoll.splice(idx, 1);
-    }
-    diceLeft -= keptDice.length;
-    if (diceLeft <= 0) {
-      diceLeft = 6;
-      currentRoll = [];
-      logMessage(`You scored ${pts}. Round total: ${roundPoints}.`);
-      logMessage("All dice used => HOT DICE! Next roll => 6 fresh dice.");
-    } else {
-      logMessage(`You scored ${pts}. Round total: ${roundPoints}. Dice left: ${diceLeft}`);
-    }
-    updateScoreboard();
-    showDice(currentRoll, true);
+  function startRegularDuel() {
+    // Choose a random pirate tier
+    currentTier = chooseRandomPirateTier();
+    pirateLives = 3;
+    playerLives = 3;
+    usedInsultsThisPirate = [];
+    clearScreen();
+    appendLine(`A ${currentTier.name} approaches, ${playerName}!`);
+    appendLine(`\n"My name is ${playerName}. Prepare to die!"`);
+    setTimeout(() => {
+      // Player starts first
+      beginPlayerTurn();
+    }, 1000);
   }
-}
 
-/*************************************************************
- * AI Turn
- *************************************************************/
-function aiTurn() {
-  if (gameOver) return;
-  updateScoreboard();
+  function beginPirateTurn() {
+    clearScreen();
+    displayHearts("You", playerLives);
+    displayHearts("Pirate", pirateLives);
+    appendLine("");
 
-  // AI logic:
-  // Keep rolling if (roundPoints < 300 and rollsCount < 4),
-  // or if it's the first roll (diceLeft=6) and roundPoints=0, up to 4 total.
-  // Otherwise, bank.
+    // Pirate picks a random insult index < tierMax
+    const idx = getRandomInt(currentTier.maxIndex);
+    const [insult, correctRetort] = AVAILABLE_INSULTS[idx];
+    currentInsult = insult;
+    currentCorrectRetort = correctRetort;
 
-  // We'll proceed step by step with a small delay
-  setTimeout(() => {
-    if ((roundPoints < 300 && rollsCount < 4) || (diceLeft === 6 && roundPoints === 0 && rollsCount < 4)) {
-      // roll
-      doAIRoll();
-    } else {
-      // bank
-      aiScore += roundPoints;
-      logMessage(`AI banks ${roundPoints} points!`);
-      roundPoints = 0;
-      diceLeft = 6;
-      currentRoll = [];
-      updateScoreboard();
-      // Check AI win
-      if (aiScore >= winningScore) {
-        logMessage(`AI reached ${winningScore} and wins. Better luck next time!`);
-        gameOver = true;
-      } else {
-        // Switch back to player
-        isPlayerTurn = true;
-        logMessage("Your turn again!");
+    // Pirate’s insult is always learned
+    if (!insultsLearned.includes(insult)) {
+      insultsLearned.push(insult);
+    }
+
+    appendLine(`Pirate: "${insult}"`);
+    appendLine("");
+
+    // Show retort options
+    retortsLearned.forEach((r, i) => {
+      appendLine(`  ${i + 1}. ${r}`);
+    });
+    const giveUpIndex = retortsLearned.length + 1;
+    appendLine(`  ${giveUpIndex}. I give up! You win!`);
+    appendLine("");
+    appendLine("Your retort (enter number):");
+    appendLine("");
+    appendLine("> ");
+
+    gameState = "pirateResponse";
+    showInputArea();
+    waitForResizeThenFocus();
+  }
+
+  function handlePirateResponse(input) {
+    hideInputArea();
+    const n = parseInt(input, 10);
+    const giveUpIndex = retortsLearned.length + 1;
+
+    if (isNaN(n) || n < 1 || n > giveUpIndex) {
+      // Invalid choice: treat as wrong retort
+      appendLine("");
+      appendLine("Wrong! You lose a heart.");
+      playerLives--;
+      if (playerLives <= 0) {
+        return finishDuel(false);
       }
+      setTimeout(beginPirateTurn, 1000);
+      return;
     }
-  }, 1500);
-}
 
-function doAIRoll() {
-  if (diceLeft <= 0) diceLeft = 6;
-  currentRoll = rollDice(diceLeft);
-  showDice(currentRoll, false);
-  let best = getBestScoringText(currentRoll);
-  logMessage(`AI's roll: ${best}`);
+    if (n === giveUpIndex) {
+      // Player gives up
+      appendLine("");
+      appendLine("You gave up! The pirate wins.");
+      playerLives = 0;
+      return finishDuel(false);
+    }
 
-  let [points, usedIx] = scoreRoll(currentRoll);
-  if (points === 0) {
-    // bust
-    logMessage("AI BUSTS! Round points lost.");
-    roundPoints = 0;
-    diceLeft = 6;
-    currentRoll = [];
-    updateScoreboard();
-    // switch to player
-    isPlayerTurn = true;
-    logMessage("Your turn!");
-  } else {
-    roundPoints += points;
-    diceLeft -= usedIx.length;
-    if (diceLeft <= 0) {
-      diceLeft = 6;
-      logMessage("AI got HOT DICE! It used all dice and will roll again.");
+    // Check if chosen retort is correct
+    const chosenRetort = retortsLearned[n - 1];
+    if (chosenRetort === currentCorrectRetort) {
+      appendLine("");
+      appendLine("Correct! Pirate loses a heart.");
+      pirateLives--;
+      if (!retortsLearned.includes(currentCorrectRetort)) {
+        retortsLearned.push(currentCorrectRetort);
+      }
+      if (pirateLives <= 0) {
+        return finishDuel(true);
+      }
+      setTimeout(beginPlayerTurn, 1000);
     } else {
-      logMessage(`AI scored ${points} points. Round total: ${roundPoints}. Dice left: ${diceLeft}`);
+      appendLine("");
+      appendLine("Wrong! You lose a heart.");
+      playerLives--;
+      if (playerLives <= 0) {
+        return finishDuel(false);
+      }
+      setTimeout(beginPirateTurn, 1000);
     }
-    rollsCount++;
-    updateScoreboard();
-    // Next decision
-    aiTurn();
   }
-}
 
-/*************************************************************
- * Displaying Dice
- *************************************************************/
-function showDice(dice, isPlayer) {
-  let ascii = diceToAscii(dice);
-  let display = document.getElementById("dice-display");
-  display.textContent = ascii;
+  function beginPlayerTurn() {
+    clearScreen();
+    displayHearts("You", playerLives);
+    displayHearts("Pirate", pirateLives);
+    appendLine("");
 
-  logMessage(`${isPlayer ? "You" : "AI"} rolled:`);
-  // We separate the ASCII dice from the log for neatness
-}
+    // Build available insults: learned minus already used in this duel
+    const learnedOptions = insultsLearned.filter(ins => !usedInsultsThisPirate.includes(ins));
+    currentPlayerInsultOptions = [...learnedOptions, ...THROWAWAY_INSULTS];
 
-/*************************************************************
- * "Press Enter to continue..." mimic 
- * (We show a hidden button if we ever need that flow)
- *************************************************************/
-function nextStep() {
-  // In a single-page approach, we might not need this often,
-  // but you could reveal #continue-btn for certain “pause” steps.
-}
+    currentPlayerInsultOptions.forEach((ins, i) => {
+      appendLine(`  ${i + 1}. ${ins}`);
+    });
+    const giveUpIndex = currentPlayerInsultOptions.length + 1;
+    appendLine(`  ${giveUpIndex}. I give up! You win!`);
+    appendLine("");
+    appendLine("Your insult (enter number):");
+    appendLine("");
+    appendLine("> ");
+
+    gameState = "playerResponse";
+    showInputArea();
+    waitForResizeThenFocus();
+  }
+
+  function handlePlayerResponse(input) {
+    hideInputArea();
+    const n = parseInt(input, 10);
+    const giveUpIndex = currentPlayerInsultOptions.length + 1;
+
+    if (isNaN(n) || n < 1 || n > giveUpIndex) {
+      // Invalid choice: lose a heart
+      appendLine("");
+      appendLine("Invalid choice! You lose a heart.");
+      playerLives--;
+      if (playerLives <= 0) {
+        return finishDuel(false);
+      }
+      setTimeout(beginPirateTurn, 1000);
+      return;
+    }
+
+    if (n === giveUpIndex) {
+      // Player gives up
+      appendLine("");
+      appendLine("You gave up! The pirate wins.");
+      playerLives = 0;
+      return finishDuel(false);
+    }
+
+    const chosenInsult = currentPlayerInsultOptions[n - 1];
+    appendLine("");
+    appendLine(`You: "${chosenInsult}"`);
+
+    // If it's a learned insult, mark as used
+    if (insultsLearned.includes(chosenInsult)) {
+      usedInsultsThisPirate.push(chosenInsult);
+    }
+
+    // If throwaway insult
+    if (THROWAWAY_INSULTS.includes(chosenInsult)) {
+      const fallback = getFallbackRetort();
+      appendLine(`Pirate: "${fallback}"`);
+      setTimeout(beginPirateTurn, 1000);
+      return;
+    }
+
+    // Otherwise, find its correct retort and index in AVAILABLE_INSULTS
+    const pairIndex = AVAILABLE_INSULTS.findIndex(pair => pair[0] === chosenInsult);
+    if (pairIndex === -1) {
+      // Should never happen if data is consistent
+      const fallback = getFallbackRetort();
+      appendLine(`Pirate: "${fallback}"`);
+      setTimeout(beginPirateTurn, 1000);
+      return;
+    }
+
+    const correctRetort = AVAILABLE_INSULTS[pairIndex][1];
+
+    // Does the pirate know this retort? (index < tierMax)
+    if (pairIndex < currentTier.maxIndex) {
+      // Pirate knows how to respond
+      appendLine(`Pirate: "${correctRetort}"`);
+      appendLine("");
+      appendLine("You lose a heart.");
+      playerLives--;
+      // Pirate “learns” this retort if not already learned
+      if (!retortsLearned.includes(correctRetort)) {
+        retortsLearned.push(correctRetort);
+      }
+      if (playerLives <= 0) {
+        return finishDuel(false);
+      }
+      setTimeout(beginPirateTurn, 1000);
+    } else {
+      // Pirate does not know retort
+      const fallback = getFallbackRetort();
+      appendLine(`Pirate: "${fallback}"`);
+      appendLine("");
+      appendLine("Pirate loses a heart.");
+      pirateLives--;
+      if (pirateLives <= 0) {
+        return finishDuel(true);
+      }
+      setTimeout(beginPlayerTurn, 1000);
+    }
+  }
+
+  function finishDuel(playerWon) {
+    clearScreen();
+    if (playerWon) {
+      appendLine('Pirate: "I give up! You win!"');
+    } else {
+      appendLine(`[ ${playerName} ]: "I give up! You win!"`);
+    }
+    appendLine("");
+    const learnedRatio = insultsLearned.length / AVAILABLE_INSULTS.length;
+
+    appendLine(`Insults known: ${insultsLearned.length}/${AVAILABLE_INSULTS.length}`);
+    appendLine(`Retorts known: ${retortsLearned.length}/${AVAILABLE_INSULTS.length}`);
+    appendLine("");
+
+    if (playerWon && learnedRatio > 0.75) {
+      appendLine("Wow! You are good enough to defeat the SwordMaster!");
+      appendLine("");
+      appendLine("Face the SwordMaster now? (type 'y' for yes, anything else to continue facing pirates)");
+      appendLine("");
+      appendLine("> ");
+      gameState = "postDuelChoice";
+      showInputArea();
+      waitForResizeThenFocus();
+    } else {
+      appendLine("Press Enter to face another pirate...");
+      appendLine("");
+      appendLine("> ");
+      gameState = "continuePirates";
+      showInputArea();
+      waitForResizeThenFocus();
+    }
+  }
+
+  function handlePostDuelChoice(input) {
+    hideInputArea();
+    if (input.trim().toLowerCase() === "y") {
+      startSwordMasterChallenge();
+    } else {
+      startRegularDuel();
+    }
+  }
+
+  function handleContinuePirates() {
+    hideInputArea();
+    startRegularDuel();
+  }
+
+  // ----------------------------
+  // SwordMaster™ challenge
+  // ----------------------------
+  function startSwordMasterChallenge() {
+    clearScreen();
+    appendLine("You wish to challenge the legendary SwordMaster™, the ultimate test of your insult sword fighting skills.");
+    appendLine("");
+    appendLine("You have faced countless pirates, and now you stand at the threshold of destiny.");
+    appendLine("The SwordMaster™ resides in a secluded glade deep within the forest, where only those truly versed in wit may pass.");
+    appendLine("");
+    appendLine("Press Enter to continue...");
+    appendLine("");
+    appendLine("> ");
+    gameState = "swordmasterIntro";
+    showInputArea();
+    waitForResizeThenFocus();
+  }
+
+  function beginSwordMasterFight() {
+    clearScreen();
+    currentPirateRound = 0;
+    proceedSwordMasterRound();
+  }
+
+  function proceedSwordMasterRound() {
+    if (currentPirateRound >= SWORDMASTER_INSULTS.length) {
+      // Victory over SwordMaster
+      clearScreen();
+      appendLine(`Victory! You have defeated the SwordMaster™ in an insult sword fight.`);
+      appendLine("");
+      appendLine(`The SwordMaster™ nods in respect and says, "Well it seems I underestimated you, ${playerName}."`);
+      appendLine(`"Anyway, you'll want to show this to those three pirates to prove your win."`);
+      appendLine("");
+      appendLine(`You are handed a shirt that reads "I beat the SwordMaster™ and all I got was this lousy t-shirt".`);
+      appendLine("");
+      appendLine("Press Enter to exit the game...");
+      appendLine("");
+      appendLine("> ");
+      gameState = "swordmasterEnd";
+      showInputArea();
+      waitForResizeThenFocus();
+      return;
+    }
+
+    const [insult, correctRetort] = SWORDMASTER_INSULTS[currentPirateRound];
+    currentCorrectRetort = correctRetort;
+    clearScreen();
+    appendLine(`SwordMaster: "${insult}"`);
+    appendLine("");
+    // Show retort options
+    retortsLearned.forEach((r, i) => {
+      appendLine(`  ${i + 1}. ${r}`);
+    });
+    appendLine("");
+    appendLine("Your retort (enter number):");
+    appendLine("");
+    appendLine("> ");
+    gameState = "swordmasterResponse";
+    showInputArea();
+    waitForResizeThenFocus();
+  }
+
+  function handleSwordmasterResponse(input) {
+    hideInputArea();
+    const n = parseInt(input, 10);
+    if (isNaN(n) || n < 1 || n > retortsLearned.length) {
+      clearScreen();
+      appendLine("Incorrect or invalid input! The Insult Master has bested you.");
+      appendLine("");
+      appendLine("GAME OVER");
+      appendLine("");
+      appendLine("Press Enter to exit...");
+      appendLine("");
+      appendLine("> ");
+      gameState = "swordmasterEnd";
+      showInputArea();
+      waitForResizeThenFocus();
+      return;
+    }
+    const chosen = retortsLearned[n - 1];
+    if (chosen !== currentCorrectRetort) {
+      clearScreen();
+      appendLine("Incorrect! The Insult Master has bested you.");
+      appendLine("");
+      appendLine("GAME OVER");
+      appendLine("");
+      appendLine("Press Enter to exit...");
+      appendLine("");
+      appendLine("> ");
+      gameState = "swordmasterEnd";
+      showInputArea();
+      waitForResizeThenFocus();
+      return;
+    }
+    // Correct retort: proceed
+    appendLine("");
+    appendLine("Well played! You matched his insult.");
+    appendLine("");
+    currentPirateRound++;
+    setTimeout(proceedSwordMasterRound, 1000);
+  }
+
+  function endSwordmasterGame() {
+    // Simply disable input and show final message; user can close tab
+    hideInputArea();
+  }
+
+  // ----------------------------
+  // Main input handler
+  // ----------------------------
+  function handleInput() {
+    const inputVal = userInput.value.trim();
+    userInput.value = "";
+
+    switch (gameState) {
+      case "title":
+        hideInputArea();
+        startTitleScreen();
+        break;
+
+      case "introNamePrompt":
+        hideInputArea();
+        startIntroName();
+        break;
+
+      case "introName":
+        handleIntroName(inputVal);
+        break;
+
+      case "pirateResponse":
+        handlePirateResponse(inputVal);
+        break;
+
+      case "playerResponse":
+        handlePlayerResponse(inputVal);
+        break;
+
+      case "postDuelChoice":
+        handlePostDuelChoice(inputVal);
+        break;
+
+      case "continuePirates":
+        handleContinuePirates();
+        break;
+
+      case "swordmasterIntro":
+        hideInputArea();
+        beginSwordMasterFight();
+        break;
+
+      case "swordmasterResponse":
+        handleSwordmasterResponse(inputVal);
+        break;
+
+      case "swordmasterEnd":
+        endSwordmasterGame();
+        break;
+
+      default:
+        // Shouldn't reach here; fallback to hiding input
+        hideInputArea();
+        break;
+    }
+  }
+
+  // Bind click + Enter key on the submit button
+  submitBtn.addEventListener("click", handleInput);
+  userInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleInput();
+    }
+  });
+
+  // ----------------------------
+  // Kick off the game
+  // ----------------------------
+  window.addEventListener("load", () => {
+    startSplash();
+  });
+})();

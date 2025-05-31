@@ -1,0 +1,57 @@
+body {
+    font-family: sans-serif;
+    background: #f9f9f9;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #game-container {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 20px;
+    background: #ffffff;
+    border: 1px solid #ccc;
+  }
+  
+  h1 {
+    text-align: center;
+    margin-top: 0;
+  }
+  
+  button {
+    margin: 5px;
+    padding: 10px;
+    cursor: pointer;
+  }
+  
+  #scoreboard {
+    margin: 10px 0;
+    padding: 10px;
+    border: 2px solid #aaa;
+    background: #eee;
+  }
+  
+  #dice-display {
+    font-family: monospace;
+    margin: 10px 0;
+  }
+  
+  #game-log {
+    margin: 10px 0;
+    height: 150px;
+    overflow-y: auto;
+    background: #fafafa;
+    border: 1px solid #ccc;
+    padding: 10px;
+  }
+  
+  #user-input {
+    width: 250px;
+    padding: 8px;
+    margin-right: 5px;
+  }
+  
+  #continue-btn {
+    display: none; /* We'll show/hide it dynamically */
+  }
+  

@@ -1,51 +1,20 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Farkle in the Browser</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Island of Duck™ — Insult Sword Fighting</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="game-container">
-    <h1>Farkle</h1>
-    
-    <!-- Difficulty Selection & Start Screen -->
-    <div id="start-screen">
-      <h2>Choose difficulty:</h2>
-      <p>Classic mode:</p>
-      <button onclick="setDifficulty('e')">Easy (1500 pts)</button>
-      <button onclick="setDifficulty('m')">Medium (3000 pts)</button>
-      <button onclick="setDifficulty('h')">Hard (5000 pts)</button>
-      <button onclick="setDifficulty('he')">Henry (10000 pts)</button>
-      <br><br>
-      <p>Dice-selection mode:</p>
-      <button onclick="setDifficulty('e+')">Easy + (1500 pts)</button>
-      <button onclick="setDifficulty('m+')">Medium + (3000 pts)</button>
-      <button onclick="setDifficulty('h+')">Hard + (5000 pts)</button>
-      <button onclick="setDifficulty('he+')">Henry + (10000 pts)</button>
-    </div>
-
-    <!-- Main Game Screen -->
-    <div id="game-screen" style="display: none;">
-      <!-- Scoreboard -->
-      <div id="scoreboard"></div>
-
-      <!-- Dice Display -->
-      <pre id="dice-display"></pre>
-
-      <!-- Action Log / Messages -->
-      <div id="game-log"></div>
-
-      <!-- User Command Input (for partial selection mode, etc.) -->
-      <input 
-        type="text" 
-        id="user-input" 
-        placeholder="Type R / B / dice indices (e.g. '1 3'), then press Enter"
-        onkeyup="handleUserInput(event)"
-      />
-      <button id="roll-btn" onclick="handleRollClick()">Roll</button>
-      <button id="bank-btn" onclick="handleBankClick()">Bank</button>
-      <button id="continue-btn" onclick="nextStep()">Continue...</button>
+    <!-- All game text will appear here -->
+    <pre id="game-output"></pre>
+    <!-- Input area: hidden until needed -->
+    <div id="input-area">
+      <input type="text" id="user-input" autocomplete="off" />
+      <button id="submit-btn">Submit</button>
     </div>
   </div>
 
