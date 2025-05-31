@@ -1,16 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Insult Sword Fighting™</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Insult Sword Fighting – Browser Edition</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Brython runtime -->
+  <script defer src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython_stdlib.js"></script>
+  <script defer src="script.js"></script>
 </head>
-<body>
-  <!-- ← This div MUST exist, so that script.js can grab it. -->
-  <div id="game-container"></div>
+<body onload="brython()">
+  <!-- Console‑like output area -->
+  <pre id="output"></pre>
 
-  <!-- Load the JavaScript *after* the #game-container div is in the DOM -->
-  <script src="script.js"></script>
+  <!-- Your original Python game – place the .py file in the same folder -->
+  <script type="text/python" src="insultFightingNew.py"></script>
+
+  <!-- Small Python shim that redirects I/O between Brython and the page -->
+  <script type="text/python">
+from browser import document, window
+import sys, builtins
+
+# Send prints to the <pre> element
+_out = document["output"]
+def _write(data):
+    _out.text += data
+    # Auto‑scroll to bottom
+    window.scrollTo(0, document.body.scrollHeight)
+
+sys.stdout.write = _write
+sys.stderr.write = _write
+
+# Replace input() with a JS prompt
+def _prompt(msg=''):
+    return window.prompt(msg)
+builtins.input = _prompt
+  </script>
 </body>
 </html>
