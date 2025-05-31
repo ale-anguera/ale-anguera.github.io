@@ -1,3 +1,6 @@
+window.addEventListener("error", e => console.error("Uncaught:", e.message));
+window.addEventListener("unhandledrejection", e => console.error("Promise reject:", e.reason));
+
 /*  script.js – loads Pyodide, wires stdin / stdout, runs the game  */
 async function main() {
   /* ---------- 1. Boot Pyodide ---------- */
