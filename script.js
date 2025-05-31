@@ -274,11 +274,21 @@
 
 You want to become a mighty pirate on The Island of Duck™.
 
-You are here to complete the Three Legendary Quests™ that have been set out for you.
-You have already completed two of them: the Quest of the Duckbeard's Treasure™ (Treasure-huntery)
-and the Quest of the Golden Egg™ (Thieving).
-Now, you must complete the Quest of the Insult Sword Fighting™ (Insulting).
+You are here to complete the Three Legendary Quests™ that three legendary pirates have set out for you. You have already completed two of them;
+the Quest of the Duckbeard's Treasure™ (Treasure-huntery) - finding the buried treasure of the legendary pirate, Captain Duckbeard, 
+and the Quest of the Golden Egg™ (Thieving) - stealing the Golden Egg™ from the temple of Governor Duckley. 
+Now, you must complete the Quest of the Insult Sword Fighting™ (Insulting), which consists of defeating the SwordMaster™ in an insult sword fight.
 The Three Legendary Quests™ are the only way to become a true pirate, and to be able to sail the Seven C's™.
+
+
+Your training with Captain Quackbeard, has been going well. 
+He has advised you to fight some local pirates to get some insulting practice.
+The key to winning a sword fight, he says, is to insult your opponent.
+You must learn the insults and their retorts, so you can defeat the SwordMaster™.
+You will face many pirates, and learn their insults and retorts.
+You will eventually face the SwordMaster™, who is the best insult sword fighter in the Quackribbean.
+
+Good luck, pirate!
 
 Type your name, then press “Submit” to begin your duel:
     `;
