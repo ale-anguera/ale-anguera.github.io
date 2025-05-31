@@ -1,40 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Insult Sword Fighting – Browser Edition</title>
-  <link rel="stylesheet" href="style.css">
-  <!-- Brython runtime -->
+  <meta charset="UTF-8" />
+  <title>Insult Sword Fighting – Browser Edition</title>
+
+  <!-- Minimal dark theme (defined in style.css) -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Brython runtime -->
   <script defer src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython_stdlib.js"></script>
+
+  <!-- Small helper that autoscrolls the output area -->
   <script defer src="script.js"></script>
 </head>
 <body onload="brython()">
-  <!-- Console‑like output area -->
+
+  <!-- Console-like output goes here -->
   <pre id="output"></pre>
 
-  <!-- Your original Python game – place the .py file in the same folder -->
-  <script type="text/python" src="insultFightingNew.py"></script>
-
-  <!-- Small Python shim that redirects I/O between Brython and the page -->
+  <!-- Shim: redirect I/O and patch os.system() -->
   <script type="text/python">
 from browser import document, window
-import sys, builtins
+import sys, os, builtins
 
-# Send prints to the <pre> element
-_out = document["output"]
+# ----- 1. redirect print() / stderr -----
+_output_area = document["output"]
+
 def _write(data):
-    _out.text += data
-    # Auto‑scroll to bottom
+    # Ensure text; some callers pass non-str objects
+    _output_area.text += str(data)
+    # Keep the latest line visible
     window.scrollTo(0, document.body.scrollHeight)
 
 sys.stdout.write = _write
 sys.stderr.write = _write
 
-# Replace input() with a JS prompt
+# ----- 2. make input() use a browser prompt -----
 def _prompt(msg=''):
     return window.prompt(msg)
 builtins.input = _prompt
+
+# ----- 3. stub out os.system('clear'/'cls') -----
+def _safe_system(cmd=''):
+    # If the game tries to clear the screen, wipe the <pre> instead
+    if cmd.strip() in ("clear", "cls"):
+        _output_area.text = ''
+    # Return 0 so the program thinks the command succeeded
+    return 0
+
+os.system = _safe_system
   </script>
+
+  <!-- Your original Python game logic -->
+  <script type="text/python" src="insultFightingNew.py"></script>
 </body>
 </html>
