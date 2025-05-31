@@ -2,113 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>TSDI - Sword Fighting</title>
+  <title>TSDI – Sword Fighting</title>
 
-  <!-- Minimal dark theme -->
+  <!-- Dark-mode look -->
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Brython runtime -->
-  <script defer src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython_stdlib.js"></script>
+  <!-- Pyodide (WebAssembly CPython) -->
+  <script defer src="https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js"></script>
 
-  <!-- Helper that autoscrolls the output area -->
+  <!-- Main loader / autoscroll / JS↔︎Python bridge -->
   <script defer src="script.js"></script>
 </head>
-<body onload="brython()">
-
-  <!-- Console-like output -->
+<body>
+  <!-- Streaming console output -->
   <pre id="output"></pre>
 
-  <!-- Shim: redirect I/O & patch desktop-only calls -->
-  <script type="text/python">
-from browser import document, window
-import sys, os, builtins, time    # time added here
-
-# ----- 1. stdout / stderr -> <pre> -----
-_out = document["output"]
-def _write(data):
-    _out.text += str(data)
-    window.scrollTo(0, document.body.scrollHeight)
-sys.stdout.write = _write
-sys.stderr.write = _write
-
-# ----- 2. in‑page input (blocking, Brython‑friendly) -----
-import asyncio
-from browser import html, timer
-
-# create a simple “console” prompt at the bottom of the page
-_input_wrapper = html.DIV(Id="input-wrapper")
-_input_prompt  = html.SPAN("> ")
-_input_box     = html.INPUT(Id="userInput", autocomplete="off")
-_input_wrapper <= _input_prompt + _input_box
-document <= _input_wrapper
-
-# explicit event loop for blocking wait
-# Ensure Brython’s default asyncio loop exists
-import browser.aio            # ← creates the loop if none exists
-_loop = asyncio.get_event_loop()
-
-# Fallback: if we still didn’t get one, build a tiny dummy loop
-if _loop is None:
-    class _DummyLoop:
-        def create_future(self):
-            class _F:
-                def __init__(self):
-                    self._done = False
-                    self._result = None
-                def done(self):   return self._done
-                def set_result(self, v):
-                    self._result, self._done = v, True
-                def result(self): return self._result
-            return _F()
-        def run_until_complete(self, _): pass
-    _loop = _DummyLoop()
-
-def _stdin(msg=''):
-    """Block (Python‑level) until user presses ENTER, without pop‑ups."""
-    if msg:
-        _out.text += msg
-    fut = _loop.create_future()
-
-    def _on_enter(ev):
-        if ev.keyCode == 13:
-            val = _input_box.value
-            _input_box.value = ''
-            _out.text += val + '\n'
-            _input_box.unbind("keydown", _on_enter)
-            fut.set_result(val)
-
-    _input_box.bind("keydown", _on_enter)
-    _input_box.focus()
-
-    # run loop in 50 ms slices so JS events get processed
-    while not fut.done():
-        _loop.run_until_complete(asyncio.sleep(0))
-        timer.set_timeout(lambda: None, 50)  # yield to browser
-
-    return fut.result()
-
-builtins.input = _stdin
-window.prompt = lambda msg='': _stdin(msg)
-
-# ----- 3. stub os.system('clear'/'cls') -----
-def _safe_system(cmd=''):
-    if cmd.strip() in ("clear", "cls"):
-        _out.text = ''
-    return 0
-os.system = _safe_system
-
-# ----- 4. make time.sleep() a no-op -----
-time.sleep = lambda *_: None
-  </script>
-
-  <!-- The original Python game -->
-  <script type="text/python" src="insultFightingNew.py"></script>
-
-  <!-- Starter: import the module and launch the game -->
-  <script type="text/python">
-import insultFightingNew as game
-game.load()
-  </script>
+  <!-- In-page input prompt -->
+  <div id="input-wrapper">
+    <span>&gt; </span><input id="userInput" autocomplete="off" />
+  </div>
 </body>
 </html>
