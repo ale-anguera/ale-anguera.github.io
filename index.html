@@ -7,9 +7,10 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="game-container">
-    <!-- All game content will be injected here by script.js -->
-  </div>
+  <!-- ← This div MUST exist, so that script.js can grab it. -->
+  <div id="game-container"></div>
+
+  <!-- Load the JavaScript *after* the #game-container div is in the DOM -->
   <script src="script.js"></script>
 </body>
 </html>
