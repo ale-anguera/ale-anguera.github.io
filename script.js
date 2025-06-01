@@ -137,6 +137,8 @@ async function load(){
 async function titleScreen(){
   while(true){
     clearScreen();
+    /* shrink banner font */
+    $out.style.fontSize = "0.8rem";
     const choice = (await getLine(`
 
         ████████╗██╗░░██╗███████╗  ░██████╗███████╗░█████╗░██████╗░███████╗████████╗  ░█████╗░███████╗
@@ -190,12 +192,14 @@ async function titleScreen(){
         
         -------------------
         Created and Designed by Alejandro Anguera de la Rosa
-        Version 1.2.4
+        Version 1.2.5
         -------------------
 
         Press 'Enter' to start.
         `)).trim();
     if(choice === "" || choice === "1"){
+      /* restore default font for rest of game */
+      $out.style.fontSize = "";
       autoScroll = true;   // enable bottom‑scrolling after first screen
       await intro();
       return;
