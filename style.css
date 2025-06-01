@@ -11,6 +11,7 @@ pre#output{
     white-space:pre-wrap;
     word-break:break-word;
     line-height:1.35rem;
+    font-size:1.1rem;   /* slightly larger story & menu text */
     padding:1rem;
     margin:0 0 3rem 0;   /* keep clear of prompt bar */
 }
@@ -32,14 +33,15 @@ pre#output{
     padding:4px 6px;
     color:#E0E0E0;
     font-family:Monaco, monospace;
+    font-size:1.1rem;
 }
 
 /* nicer battle UI */
 .name{
-    font-size:1.4rem;
+    font-size:1.6rem;
     font-weight:700;
 }
 .hearts{
-    font-size:1.6rem;
+    font-size:2rem;
     color:#ff4d4d;      /* red */
 }
