@@ -138,7 +138,7 @@ async function titleScreen(){
   while(true){
     clearScreen();
     /* shrink banner font */
-    $out.style.fontSize   = "0.6rem";
+    $out.style.fontSize   = "1rem";
     $out.style.lineHeight = "0.7rem";   // tighter spacing avoids gaps
     $out.style.textAlign  = "center";   // center banner horizontally
     const choice = (await getLine(`
@@ -192,7 +192,7 @@ async function titleScreen(){
                                                                                                           
         -------------------
         Created and Designed by Alejandro Anguera de la Rosa
-        Version 1.2.8
+        Version 1.2.9
         -------------------
         Press 'Enter' to start.
         `)).trim();
