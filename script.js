@@ -95,10 +95,8 @@ const retortsLearned = new Set([
 function displayHearts(label, lives){
   const hearts = "❤️".repeat(lives) + "🤍".repeat(3 - lives);
 
-  // create a dedicated block so each bar is on its own line
-  const line = document.createElement("div");
-  line.innerHTML = `<span class="name">${label}</span>: <span class="hearts">${hearts}</span>`;
-  $out.appendChild(line);
+  // write as HTML with an explicit <br> so each bar is on its own line
+  $out.innerHTML += `<span class="name">${label}</span>: <span class="hearts">${hearts}</span><br>`;
 
   if (autoScroll) {
     document.documentElement.scrollTop = document.documentElement.scrollHeight;
