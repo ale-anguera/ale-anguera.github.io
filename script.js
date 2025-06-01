@@ -144,6 +144,7 @@ $out.style.lineHeight = "0.85rem";
 
 /* centre the whole banner as one <pre>, so inner padding stays intact */
 const bannerArt = `
+
         ████████╗██╗░░██╗███████╗  ░██████╗███████╗░█████╗░██████╗░███████╗████████╗  ░█████╗░███████╗
         ╚══██╔══╝██║░░██║██╔════╝  ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔════╝╚══██╔══╝  ██╔══██╗██╔════╝
         ░░░██║░░░███████║█████╗░░  ╚█████╗░█████╗░░██║░░╚═╝██████╔╝█████╗░░░░░██║░░░  ██║░░██║█████╗░░
@@ -196,7 +197,7 @@ const bannerArt = `
 const footerText = `
 ------------------------------------------------------
 Created and Designed by Alejandro Anguera de la Rosa
-Version 1.2.9.6
+Version 1.2.9.7
 ------------------------------------------------------
 `;
 
@@ -206,8 +207,9 @@ $out.innerHTML =
   `<pre class="footer">${footerText}</pre>`;
   
 document.querySelector(".banner").style.margin = "0 auto";
+document.querySelector(".banner").style.paddingLeft = "4ch";   // indent banner 4 character cells
 
-const choice = (await getLine("\nPress 'Enter' to start.\n>")).trim();
+const choice = (await getLine("\nPress 'Enter' to start.")).trim();
     if(choice === "" || choice === "1"){
       /* restore default font for rest of game */
       $out.style.fontSize = "";
