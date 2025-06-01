@@ -121,13 +121,13 @@ async function countdown(t){
 async function load(){
   clearScreen();
   print(`
-        ----------------------------
+        -----------------------------
         
         Deep In The Atlantic Ocean...
         
         The Island of Duck™        
         
-        ----------------------------
+        -----------------------------
   `);
   await countdown(3);
   await titleScreen();
@@ -137,11 +137,13 @@ async function load(){
 async function titleScreen(){
   while(true){
     clearScreen();
-    /* shrink banner font */
-    $out.style.fontSize   = "0.9rem";
-    $out.style.lineHeight = "1rem";   // tighter spacing avoids gaps
-    $out.style.textAlign  = "center";   // center banner horizontally
-    const choice = (await getLine(`
+
+/* shrink banner font + spacing */
+$out.style.fontSize   = "0.9rem";
+$out.style.lineHeight = "0.85rem";
+
+/* centre the whole banner as one <pre>, so inner padding stays intact */
+const bannerArt = `
         ████████╗██╗░░██╗███████╗  ░██████╗███████╗░█████╗░██████╗░███████╗████████╗  ░█████╗░███████╗
         ╚══██╔══╝██║░░██║██╔════╝  ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔════╝╚══██╔══╝  ██╔══██╗██╔════╝
         ░░░██║░░░███████║█████╗░░  ╚█████╗░█████╗░░██║░░╚═╝██████╔╝█████╗░░░░░██║░░░  ██║░░██║█████╗░░
@@ -156,11 +158,11 @@ async function titleScreen(){
         ██████╔╝╚██████╔╝╚█████╔╝██║░╚██╗  ██║██████╔╝███████╗██║░░██║██║░╚███║██████╔╝██╗
         ╚═════╝░░╚═════╝░░╚════╝░╚═╝░░╚═╝  ╚═╝╚═════╝░╚══════╝╚═╝░░╚═╝╚═╝░░╚══╝╚═════╝░╚═╝
                 n                                                                 :.
-                E%                                                                : 5
-                z  %                                                              :  . 
-                K    :                                                           z   R
+                E%                                                                :"5
+                z  %                                                              :" .
+                K   ":                                                           z   R
                 ?     %.                                                       :^    J
-                .     ^s                                                     f     :~
+                ".    ^s                                                     f     :~
   ██████  █     █░ ▒█████   ██▀███  ▓█████▄      █████▒██▓  ▄████  ██░ ██ ▄▄▄█████▓ ██▓ ███▄    █   ▄████ 
 ▒██    ▒ ▓█░ █ ░█░▒██▒  ██▒▓██ ▒ ██▒▒██▀ ██▌   ▓██   ▒▓██▒ ██▒ ▀█▒▓██░ ██▒▓  ██▒ ▓▒▓██▒ ██ ▀█   █  ██▒ ▀█▒
 ░ ▓██▄   ▒█░ █ ░█ ▒██░  ██▒▓██ ░▄█ ▒░██   █▌   ▒████ ░▒██▒▒██░▄▄▄░▒██▀▀██░▒ ▓██░ ▒░▒██▒▓██  ▀█ ██▒▒██░▄▄▄░
@@ -170,36 +172,41 @@ async function titleScreen(){
 ░ ░▒  ░ ░  ▒ ░ ░    ░ ▒ ▒░   ░▒ ░ ▒░ ░ ▒  ▒     ░      ▒ ░  ░   ░  ▒ ░▒░ ░    ░     ▒ ░░ ░░   ░ ▒░  ░   ░ 
 ░  ░  ░    ░   ░  ░ ░ ░ ▒    ░░   ░  ░ ░  ░     ░ ░    ▒ ░░ ░   ░  ░  ░░ ░  ░       ▒ ░   ░   ░ ░ ░ ░   ░ 
       ░      ░        ░ ░     ░        ░               ░        ░  ░  ░  ░          ░           ░       ░ 
-                            s   ^*L                   z#   .* 
-                                #s   ^%L               z#   .* 
-                                #s   ^%L           z#   .r 
-                                    #s   ^%.       u#   .r 
-                                    #i    %.   u#   .@ 
-                                        #s   ^%u#   .@ 
-                                        #s x#   .* 
-                                        x#    .@%.
-                                        x#    .d   %. 
-                                    xf~   .r  #s   %. 
-                                u   x*   .r      #s    %.  x.
-                                %Mu*   x*         #m.   %zX 
-                                :R(h x*              h..*dN.
-                            u@NM5e#>                 7?dMRMh.
-                            z$@M@$# #                 *  *@MM$hL
-                        u@@MM8*                          *$M@Mh.
-                        z$RRM8F                              N8@M$bL
-                        5 RM$#                                  R88f)R                                                                                                                                                                     
+                                "s   ^*L                   z#   .*"
+                                    #s   ^%L               z#   .*"
+                                    #s   ^%L           z#   .r"
+                                        #s   ^%.       u#   .r"
+                                        #i   '%.   u#   .@"
+                                            #s   ^%u#   .@"
+                                            #s x#   .*"
+                                            x#  .@%.
+                                            x#  .d"  "%.
+                                        xf~  .r" #s   "%.
+                                    u   x*  .r"     #s   "%.  x.
+                                    %Mu*  x*"         #m.  "%zX"
+                                    :R(h x*              "h..*dN.
+                                u@NM5e#>                 7?dMRMh.
+                                z$@M@$#"#"                 *""*@MM$hL
+                            u@@MM8*                          "*$M@Mh.
+                            z$RRM8F"                             "N8@M$bL
+                            5RM$#                                  'R88f)R
+                            'h.$"                                     #$x*                                                                                                                                                                       
                                                            
         ----------------------------------------------------
         Created and Designed by Alejandro Anguera de la Rosa
-        Version 1.2.9.1
+        Version 1.2.9.5
         ----------------------------------------------------
         Press 'Enter' to start.
-        `)).trim();
+`;
+
+$out.innerHTML = `<pre class="banner">${bannerArt}</pre>`;
+document.querySelector(".banner").style.margin = "0 auto";
+
+const choice = (await getLine("\nPress 'Enter' to start.\n>")).trim();
     if(choice === "" || choice === "1"){
       /* restore default font for rest of game */
       $out.style.fontSize = "";
       $out.style.lineHeight = "";       // restore normal spacing
-      $out.style.textAlign = "";        // return to normal left‑align
       autoScroll = true;   // enable bottom‑scrolling after first screen
       await intro();
       return;
