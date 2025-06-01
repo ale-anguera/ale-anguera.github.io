@@ -32,6 +32,14 @@ function getLine(promptText = "") {
   });
 }
 
+/* helper to prompt via input placeholder */
+async function getLineP(placeholder){
+  $in.placeholder = placeholder;
+  const val = (await getLine("")).trim();
+  $in.placeholder = "";
+  return val;
+}
+
 /* helper delays */
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const rnd    = arr => arr[Math.floor(Math.random()*arr.length)];
@@ -235,18 +243,17 @@ async function intro(){
 
 You want to become a mighty pirate on The Island of Duck™.
 
-You are here to complete the Three Legendary Quests™ that three legendary pirates have set out for you. You have already completed two of them;
-the Quest of the Duckbeard's Treasure™ (Treasure-huntery) - which consisted of finding the buried treasure of the legendary pirate, Captain Duckbeard, 
-and the Quest of the Golden Egg™ (Thieving) - which meant stealing the Golden Egg™ from the temple of Governor Duckley.. 
-Now, you must complete the Quest of the Insult Sword Fighting™ (Insulting).
-The Three Legendary Quests™ are the only way to become a true pirate, and to be able to sail the Seven C's™.
+You are here to complete the Three Legendary Quests™ that three legendary pirates have set out for you. 
+You've finished two of the Three Legendary Quests™—digging up Captain Duckbeard's treasure and stealing Governor Duckley's Golden Egg™. 
+Only the final trial remains: the Quest of Insult Sword Fighting™. 
+Captain Bill says sharp-tongued insults win duels, so spar with local pirates, master every insult-retort, and then challenge the SwordMaster™, the fiercest tongue in the Quackribbean.
 
-Your training with Captain Bill, has been going well.
-He has advised you to fight some local pirates to get some practice.
-The key to winning a sword fight, he says, is to insult your opponent with a sharp tongue.
-You must learn the insults and their retorts, so you can defeat the SwordMaster™.
-You will face many pirates, and learn their insults and retorts.
-Lastly, you will face the SwordMaster™, who is the best insult sword fighter in the Quackribbean.
+
+In each duel you and your opponent start with three hearts ❤️❤️❤️. 
+When the pirate insults, pick the numbered retort that answers it; when it's your turn, choose an insult to stump them. 
+A wrong answer costs a heart ❤️❤️🤍; lose them all and you lose the fight 🤍🤍🤍.
+You can give up at any time, but the pirate will win. If you win, you learn the pirate's insult and retort, and can use them in future duels. 
+The more insults you know, the better your chances against the SwordMaster™.
 
 Good luck, pirate!
 
@@ -288,7 +295,9 @@ async function regularDuel(playerName){
     while(pirateLives>0 && playerLives>0){
       print("");
       displayHearts("You", playerLives);
+      print("");
       displayHearts("Pirate", pirateLives);
+      print("");
 
       if(turn === "pirate"){
         const idx = Math.floor(Math.random()*tierMax);
@@ -300,7 +309,7 @@ async function regularDuel(playerName){
         retortsArr.forEach((r,i)=>print(`  ${i+1}. ${r}`));
         const giveUp = retortsArr.length + 1;
         print(`  ${giveUp}. I give up! You win!`);
-        const choice = await getLine("\nYour retort (number): ");
+        const choice = await getLineP("Your retort (number)");
         if(+choice === giveUp){
           print("\nYou gave up! The pirate wins.");
           playerLives = 0;
@@ -323,7 +332,7 @@ async function regularDuel(playerName){
         available.forEach((ins,i)=>print(`  ${i+1}. ${ins}`));
         const giveUp = available.length + 1;
         print(`  ${giveUp}. I give up! You win!`);
-        const choice = await getLine("\nYour insult (number): ");
+        const choice = await getLineP("Your insult (number)");
         if(+choice === giveUp){
           print("\nYou gave up! The pirate wins.");
           playerLives = 0; break;
@@ -354,7 +363,8 @@ async function regularDuel(playerName){
           }
         }
       }
-      await sleep(1500); clearScreen();
+      await getLineP("Press 'Enter' to continue");
+      clearScreen();
     }
 
     /* outcome */
@@ -368,10 +378,10 @@ async function regularDuel(playerName){
     print(`Retorts known: ${retortsLearned.size}/${AVAILABLE_INSULTS.length}`);
 
     if(learnedRatio>0.75){
-      const ans = (await getLine("\nFace the SwordMaster now? (y / Enter to skip): ")).trim().toLowerCase();
+      const ans = (await getLine("\nFace the SwordMaster now? (y / 'Enter' to skip): ")).trim().toLowerCase();
       if(ans==="y"){ await swordmaster(playerName); return; }
     }
-    await getLine("\nPress 'Enter' for another pirate...");
+    await getLineP("Press 'Enter' to face another pirate");
     clearScreen();
   }
 }
@@ -380,23 +390,36 @@ async function regularDuel(playerName){
 async function swordmaster(playerName){
   clearScreen();
   await getLine(`
-[… long intro kept verbatim …]
+  You wish to challenge the legendary SwordMaster™, the ultimate test of your insult sword fighting skills.
+  Your journey has led you through countless pirate battles, and now you stand at the threshold of destiny.
+  The SwordMaster™ resides in a secluded glade deep within the forest, where only those truly versed in wit may pass.
 
-Press 'Enter' to continue.
->`);
+  You enter a dim, cluttered shop on the village square, where a wiry, one-eyed shopkeeper greets you: "Ahoy there, fancy pants!". 
+  He listens as you explain you seek the famed SwordMaster™. He tells you to stay in the shop whilst he goes to ask the SwordMaster™ if she would like to see you - "AND DON'T TOUCH ANYTHING!". 
+  Sneakily, you follow him through the village at a distance, until you reach a forest, where you traverse a winding path under rustling boughs and crouching roots. 
+  You emerge into a clearing where a modest wooden house stands, smoke rising from its chimney. The shopkeeper mentions the mighty pirate wannabe named ${playerName}. 
+  The SwordMaster™ does not want anything to do with you, and sends the shopkeeper away. 
+  
+  You then approach the SwordMaster™, she looks up at you and says:
+  "So, you are ${playerName}? I bet those three bums have sent you on the three quests... I don't have time for amateurs. 
+  But if you want to prove yourself, you'll have to defeat me in an insult sword fight."
+
+
+  Press 'Enter' to continue.
+  >`);
   clearScreen();
 
   for(const [insult, correct] of SWORDMASTER_INSULTS){
     print(`SwordMaster: '${insult}'\n`);
     const choices = Array.from(retortsLearned);
     choices.forEach((r,i)=>print(`  ${i+1}. ${r}`));
-    const choice = await getLine("\nYour retort (number): ");
+    const choice = await getLineP("Your retort (number)");
     if(choices[+choice-1] !== correct){
       print("\nIncorrect! The SwordMaster has bested you.\nGAME OVER");
       return;
     }
     print("\nWell played! You matched the insult.");
-    await getLine("Press 'Enter' for the next round...");
+    await getLineP("'Enter' for next round");
     clearScreen();
   }
   await getLine(`
