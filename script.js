@@ -246,24 +246,26 @@ You want to become a mighty pirate on The Island of Duck™.
 You are here to complete the Three Legendary Quests™ that three legendary pirates have set out for you. 
 You've finished two of the Three Legendary Quests™—digging up Captain Duckbeard's treasure and stealing Governor Duckley's Golden Egg™. 
 Only the final trial remains: the Quest of Insult Sword Fighting™. 
-Captain Bill says sharp-tongued insults win duels, so spar with local pirates, master every insult-retort, and then challenge the SwordMaster™, the fiercest tongue in the Quackribbean.
+Captain Bill says sharp-tongued insults win duels, so spar with local pirates, master every insult-retort, 
+and then challenge the SwordMaster™ - the fiercest tongue in the Quackribbean.
 
 
 In each duel you and your opponent start with three hearts ❤️❤️❤️. 
-When the pirate insults, pick the numbered retort that answers it; when it's your turn, choose an insult to stump them. 
-A wrong answer costs a heart ❤️❤️🤍; lose them all and you lose the fight 🤍🤍🤍.
-You can give up at any time, but the pirate will win. If you win, you learn the pirate's insult and retort, and can use them in future duels. 
+When the pirate insults, pick the numbered retort that answers it; when it's your turn, choose an insult to stump them.
+Every time you answer correctly, the pirate loses a heart ❤️❤️🤍; if you answer incorrectly, you lose a heart ❤️❤️🤍. 
+Lose them all and you lose the fight 🤍🤍🤍.
+You learn new insults and retorts as the pirates say them, and can use them in future fights.
 The more insults you know, the better your chances against the SwordMaster™.
 
 Good luck, pirate!
 
-Please type your name, and then hit 'Enter' to continue.
->`)).trim();
+`)).trim();
+    $in.placeholder = "Please type your name, and then hit 'Enter' to continue.";
     if(name){
       await regularDuel(name);
       return;
     }
-    print("Type your name to start.");
+    print("Please, type your name to start.");
     await sleep(1200);
   }
 }
@@ -391,22 +393,24 @@ async function swordmaster(playerName){
   clearScreen();
   await getLine(`
   You wish to challenge the legendary SwordMaster™, the ultimate test of your insult sword fighting skills.
-  Your journey has led you through countless pirate battles, and now you stand at the threshold of destiny.
-  The SwordMaster™ resides in a secluded glade deep within the forest, where only those truly versed in wit may pass.
-
   You enter a dim, cluttered shop on the village square, where a wiry, one-eyed shopkeeper greets you: "Ahoy there, fancy pants!". 
-  He listens as you explain you seek the famed SwordMaster™. He tells you to stay in the shop whilst he goes to ask the SwordMaster™ if she would like to see you - "AND DON'T TOUCH ANYTHING!". 
+  He listens as you explain you seek the famed SwordMaster™. He tells you to stay in the shop whilst he enquires with the SwordMaster™. 
+  "AND DON'T TOUCH ANYTHING!".
   Sneakily, you follow him through the village at a distance, until you reach a forest, where you traverse a winding path under rustling boughs and crouching roots. 
-  You emerge into a clearing where a modest wooden house stands, smoke rising from its chimney. The shopkeeper mentions the mighty pirate wannabe named ${playerName}. 
+  You emerge into a clearing where a modest wooden house stands, smoke rising from its chimney. The shopkeeper talks to the SwordMaster™. 
   The SwordMaster™ does not want anything to do with you, and sends the shopkeeper away. 
   
   You then approach the SwordMaster™, she looks up at you and says:
-  "So, you are ${playerName}? I bet those three bums have sent you on the three quests... I don't have time for amateurs. 
+  "So, you are ${playerName}? I bet those three bums have sent you on those three quests... I don't have time for amateurs. 
   But if you want to prove yourself, you'll have to defeat me in an insult sword fight."
 
 
-  Press 'Enter' to continue.
-  >`);
+  The SwordMaster™ starts with five hearts ❤️❤️❤️❤️❤️, and you start with one ❤️.
+  Only the SwordMaster™ can use insults, and you can only use retorts.
+  The insults that the SwordMaster™ uses are not the same as the ones you learned from other pirates, but some retorts work too.
+
+  `);
+  await getLineP("Press 'Enter' to start the fight");
   clearScreen();
 
   for(const [insult, correct] of SWORDMASTER_INSULTS){
@@ -428,10 +432,10 @@ Victory! You have defeated the SwordMaster™ in an insult sword fight.
 The SwordMaster™ nods in respect and says,
 "Well it seems I underestimated you, ${playerName}…"
 
-Press 'Enter' to revel in glory!
->`);
+`);
+  await getLineP("Press 'Enter' to revel in glory!");
   clearScreen();
-  print("YOU WIN!  🏴‍☠️  Refresh the page to play again.");
+  print("YOU WIN!  🏴‍☠️  Refresh the page to play again. Hope you enjoyed the game - heavily inspired in The Secret of Monkey Island.");
 }
 
 /* ======================  kick things off  ====================== */
