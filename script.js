@@ -144,7 +144,6 @@ $out.style.lineHeight = "0.85rem";
 
 /* centre the whole banner as one <pre>, so inner padding stays intact */
 const bannerArt = `
-
         ████████╗██╗░░██╗███████╗  ░██████╗███████╗░█████╗░██████╗░███████╗████████╗  ░█████╗░███████╗
         ╚══██╔══╝██║░░██║██╔════╝  ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔════╝╚══██╔══╝  ██╔══██╗██╔════╝
         ░░░██║░░░███████║█████╗░░  ╚█████╗░█████╗░░██║░░╚═╝██████╔╝█████╗░░░░░██║░░░  ██║░░██║█████╗░░
@@ -197,7 +196,7 @@ const bannerArt = `
 const footerText = `
 ------------------------------------------------------
 Created and Designed by Alejandro Anguera de la Rosa
-Version 1.2.9.7
+Version 1.2.9.8
 ------------------------------------------------------
 `;
 
@@ -207,9 +206,12 @@ $out.innerHTML =
   `<pre class="footer">${footerText}</pre>`;
   
 document.querySelector(".banner").style.margin = "0 auto";
-document.querySelector(".banner").style.paddingLeft = "4ch";   // indent banner 4 character cells
+//document.querySelector(".banner").style.paddingLeft = "4ch";   // indent banner 4 character cells
 
-const choice = (await getLine("\nPress 'Enter' to start.")).trim();
+// show the hint inside the text box itself
+$in.placeholder = "Press 'Enter' to start.";
+const choice = (await getLine("")).trim();
+$in.placeholder = "";   // clear placeholder after first input
     if(choice === "" || choice === "1"){
       /* restore default font for rest of game */
       $out.style.fontSize = "";
