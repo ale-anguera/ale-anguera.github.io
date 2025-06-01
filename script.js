@@ -192,14 +192,19 @@ const bannerArt = `
                             5RM$#                                  'R88f)R
                             'h.$"                                     #$x*                                                                                                                                                                       
                                                            
-        ----------------------------------------------------
-        Created and Designed by Alejandro Anguera de la Rosa
-        Version 1.2.9.5
-        ----------------------------------------------------
-        Press 'Enter' to start.
+`;
+const footerText = `
+------------------------------------------------------
+Created and Designed by Alejandro Anguera de la Rosa
+Version 1.2.9.6
+------------------------------------------------------
 `;
 
-$out.innerHTML = `<pre class="banner">${bannerArt}</pre>`;
+/* 3️ Write both blocks: banner (<pre>) + footer (<pre>) */
+$out.innerHTML =
+  `<pre class="banner">${bannerArt}</pre>` +
+  `<pre class="footer">${footerText}</pre>`;
+  
 document.querySelector(".banner").style.margin = "0 auto";
 
 const choice = (await getLine("\nPress 'Enter' to start.\n>")).trim();
