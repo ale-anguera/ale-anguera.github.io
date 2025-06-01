@@ -1,3 +1,5 @@
+/* global auto‑scroll flag: off for first banner, on afterwards */
+let autoScroll = false;
 /* ======================  utility I/O  ====================== */
 const $out  = document.getElementById("output");
 const $in   = document.getElementById("userInput");
@@ -5,7 +7,9 @@ const $in   = document.getElementById("userInput");
 function print(txt = "") {
   $out.textContent += txt + "\n";
   // auto-scroll
-  document.documentElement.scrollTop = document.documentElement.scrollHeight;
+  if (autoScroll) {
+    document.documentElement.scrollTop = document.documentElement.scrollHeight;
+  }
 }
 function clearScreen() { $out.textContent = ""; }
 
@@ -186,6 +190,7 @@ async function titleScreen(){
         Press 'Enter' to start.
         `)).trim();
     if(choice === "" || choice === "1"){
+      autoScroll = true;   // enable bottom‑scrolling after first screen
       await intro();
       return;
     }
@@ -205,20 +210,17 @@ async function intro(){
 You want to become a mighty pirate on The Island of Duck™.
 
 You are here to complete the Three Legendary Quests™ that three legendary pirates have set out for you. You have already completed two of them;
-the Quest of the Duckbeard's Treasure™ (Treasure-huntery), and the Quest of the Golden Egg™ (Thieving). 
+the Quest of the Duckbeard's Treasure™ (Treasure-huntery) - which consisted of finding the buried treasure of the legendary pirate, Captain Duckbeard, 
+and the Quest of the Golden Egg™ (Thieving) - which meant stealing the Golden Egg™ from the temple of Governor Duckley.. 
 Now, you must complete the Quest of the Insult Sword Fighting™ (Insulting).
 The Three Legendary Quests™ are the only way to become a true pirate, and to be able to sail the Seven C's™.
 
-The first quest required finding the buried treasure of the legendary pirate, Captain Duckbeard.
-The second, stealing the Golden Egg™ from the temple of Governor Duckley.
-The last quest, is to beat the legendary pirate, The SwordMaster™, in an insult sword fight.
-
-Your training with Captain Quackbeard, has been going well. 
+Your training with Captain Bill, has been going well.
 He has advised you to fight some local pirates to get some practice.
-The key to winning a sword fight, he says, is to insult your opponent.
+The key to winning a sword fight, he says, is to insult your opponent with a sharp tongue.
 You must learn the insults and their retorts, so you can defeat the SwordMaster™.
 You will face many pirates, and learn their insults and retorts.
-You will also face the SwordMaster™, who is the best insult sword fighter in the Quackribbean.
+Lastly, you will face the SwordMaster™, who is the best insult sword fighter in the Quackribbean.
 
 Good luck, pirate!
 
