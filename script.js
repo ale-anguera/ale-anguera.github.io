@@ -138,9 +138,9 @@ async function titleScreen(){
   while(true){
     clearScreen();
     /* shrink banner font */
-    $out.style.fontSize = "0.8rem";
+    $out.style.fontSize = "0.6rem";
+    $out.style.textAlign = "center";    // center banner horizontally
     const choice = (await getLine(`
-
         ████████╗██╗░░██╗███████╗  ░██████╗███████╗░█████╗░██████╗░███████╗████████╗  ░█████╗░███████╗
         ╚══██╔══╝██║░░██║██╔════╝  ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔════╝╚══██╔══╝  ██╔══██╗██╔════╝
         ░░░██║░░░███████║█████╗░░  ╚█████╗░█████╗░░██║░░╚═╝██████╔╝█████╗░░░░░██║░░░  ██║░░██║█████╗░░
@@ -188,18 +188,17 @@ async function titleScreen(){
                             z$RRM8F                              N8@M$bL
                             5 RM$#                                  R88f)R
                             h.$                                      #$x*                                                                                                                                                                           
-                                                                                                           
-        
+                                                                                                          
         -------------------
         Created and Designed by Alejandro Anguera de la Rosa
-        Version 1.2.5
+        Version 1.2.6
         -------------------
-
         Press 'Enter' to start.
         `)).trim();
     if(choice === "" || choice === "1"){
       /* restore default font for rest of game */
       $out.style.fontSize = "";
+      $out.style.textAlign = "";        // return to normal left‑align
       autoScroll = true;   // enable bottom‑scrolling after first screen
       await intro();
       return;
