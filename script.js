@@ -98,7 +98,7 @@ async function countdown(t){
   while(t){
     const m = String(Math.floor(t/60)).padStart(2,"0");
     const s = String(t%60).padStart(2,"0");
-    print(`\rStarting in ${m}:${s}`);
+    //print(`\rStarting in ${m}:${s}`);
     await sleep(1000);
     t--;
     // overwrite previous line
@@ -119,7 +119,7 @@ async function load(){
         
         ----------------------------
   `);
-  await countdown(5);
+  await countdown(3);
   await titleScreen();
 }
 
@@ -127,8 +127,7 @@ async function load(){
 async function titleScreen(){
   while(true){
     clearScreen();
-    const choice = await getLine(`
-<press Enter or 1 to begin>
+    const choice = (await getLine(`
 
         ████████╗██╗░░██╗███████╗  ░██████╗███████╗░█████╗░██████╗░███████╗████████╗  ░█████╗░███████╗
         ╚══██╔══╝██║░░██║██╔════╝  ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔════╝╚══██╔══╝  ██╔══██╗██╔════╝
@@ -181,11 +180,11 @@ async function titleScreen(){
         
         -------------------
         Created and Designed by Alejandro Anguera de la Rosa
-        Version 0.8.0
+        Version 1.2.1
         -------------------
 
         Press 'Enter' to start.
-        >`).trim();
+        `)).trim();
     if(choice === "" || choice === "1"){
       await intro();
       return;
@@ -199,7 +198,7 @@ async function titleScreen(){
 async function intro(){
   while(true){
     clearScreen();
-    const name = await getLine(`
+    const name = (await getLine(`
 █ █▄░█ ▀█▀ █▀█ █▀█ █▀▄ █░█ █▀▀ ▀█▀ █ █▀█ █▄░█
 █ █░▀█ ░█░ █▀▄ █▄█ █▄▀ █▄█ █▄▄ ░█░ █ █▄█ █░▀█
 
@@ -224,7 +223,7 @@ You will also face the SwordMaster™, who is the best insult sword fighter in t
 Good luck, pirate!
 
 Please type your name, and then hit 'Enter' to continue.
->`).trim();
+>`)).trim();
     if(name){
       await regularDuel(name);
       return;
