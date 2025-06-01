@@ -99,7 +99,6 @@ function displayHearts(label, lives){
     document.documentElement.scrollTop = document.documentElement.scrollHeight;
   }
 }
-}
 
 /* countdown like original */
 async function countdown(t){
