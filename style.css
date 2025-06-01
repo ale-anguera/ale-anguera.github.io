@@ -33,3 +33,13 @@ pre#output{
     color:#E0E0E0;
     font-family:Monaco, monospace;
 }
+
+/* nicer battle UI */
+.name{
+    font-size:1.4rem;
+    font-weight:700;
+}
+.hearts{
+    font-size:1.6rem;
+    color:#ff4d4d;      /* red */
+}

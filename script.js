@@ -93,8 +93,12 @@ const retortsLearned = new Set([
 
 /* ======================  UI helpers  ====================== */
 function displayHearts(label, lives){
-  const hearts = "♥︎".repeat(lives) + "♡".repeat(3 - lives);
-  print(`${label}: ${hearts}`);
+  const hearts = "❤️".repeat(lives) + "🤍".repeat(3 - lives);
+  $out.innerHTML += `<span class="name">${label}</span>: <span class="hearts">${hearts}</span><br>`;
+  if (autoScroll) {
+    document.documentElement.scrollTop = document.documentElement.scrollHeight;
+  }
+}
 }
 
 /* countdown like original */
@@ -184,7 +188,7 @@ async function titleScreen(){
         
         -------------------
         Created and Designed by Alejandro Anguera de la Rosa
-        Version 1.2.1
+        Version 1.2.2
         -------------------
 
         Press 'Enter' to start.
