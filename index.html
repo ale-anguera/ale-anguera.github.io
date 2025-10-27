@@ -2,18 +2,70 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>TSDI - Sword Fighting</title>
-
-  <link rel="stylesheet" href="style.css" />
-  <script defer src="script.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Finder</title>
 </head>
 <body>
-  <!-- streaming text console -->
-  <pre id="output"></pre>
+  <form id="filterForm">
+    <label for="occupation">Occupation:</label>
+    <select id="occupation" name="occupation">
+      <option value="all">All occupations</option>
+      <option value="Advertising and Promotions Manager">Advertising and Promotions Manager</option>
+      <option value="Advertising sales agents">Advertising sales agents</option>
+      <option value="Agricultural and food science technicians">Agricultural and food science technicians</option>
+      <option value="Biological scientists">Biological scientists</option>
+      <option value="Chemical technicians">Chemical technicians</option>
+      <option value="Chief executive">Chief executive</option>
+      <option value="Coaches">Coaches</option>
+      <option value="Community and Social Services Worker">Community and Social Services Worker</option>
+      <option value="Computer and Information Systems Manager">Computer and Information Systems Manager</option>
+      <option value="Editors">Editors</option>
+      <option value="Education and childcare administrators">Education and childcare administrators</option>
+      <option value="Electrical etc assemblers">Electrical etc assemblers</option>
+      <option value="Financial managers">Financial managers</option>
+      <option value="First-line supervisor">First-line supervisor</option>
+      <option value="General and operations managers">General and operations managers</option>
+      <option value="Human resource workers">Human resource workers</option>
+      <option value="Janitors and building cleaners">Janitors and building cleaners</option>
+      <option value="Logisticians">Logisticians</option>
+      <option value="Market research analysts and specialists">Market research analysts and specialists</option>
+      <option value="Marketing manager">Marketing manager</option>
+      <option value="Medical and health services managers">Medical and health services managers</option>
+      <option value="News analysts">News analysts</option>
+      <option value="Occupational health and safety specialists">Occupational health and safety specialists</option>
+      <option value="Personal financial advisors">Personal financial advisors</option>
+      <option value="Public relations and fundraising managers">Public relations and fundraising managers</option>
+      <option value="Sales managers">Sales managers</option>
+      <option value="School bus drivers">School bus drivers</option>
+      <option value="Social and community service managers">Social and community service managers</option>
+      <option value="Substance abuse and behavioral disorder counsellors">Substance abuse and behavioral disorder counsellors</option>
+      <option value="Web and digital interface designers">Web and digital interface designers</option>
+      <option value="Web developers">Web developers</option>
+    </select>
+    <br><br>
 
-  <!-- fixed input bar -->
-  <div id="input-wrapper">
-    <span>&gt; </span><input id="userInput" autocomplete="off" />
-  </div>
+    <label for="gender">Gender:</label>
+    <select id="gender" name="gender">
+      <option value="all">All genders</option>
+      <option value="M">Man</option>
+      <option value="W">Woman</option>
+    </select>
+    <br><br>
+
+    <label for="ai">AI:</label>
+    <select id="ai" name="ai">
+      <option value="all">All AIs</option>
+      <option value="ImageFX">ImageFX</option>
+      <option value="Leonardo">Leonardo</option>
+      <option value="Luma">Luma</option>
+      <option value="Meta">Meta</option>
+      <option value="Recraft">Recraft</option>
+    </select>
+    <br><br>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <script src="sortFunctions.js"></script>
 </body>
 </html>
