@@ -1261,6 +1261,15 @@ function filterImagesByCriteria(query, array) {
   });
 }
 
+// Randomise (shuffle) array order
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 // const genderSelect = "W";
 // const AI_select = "Meta";
 // const occupationSelect = "Advertising and Promotions Manager";
@@ -1282,29 +1291,62 @@ document.addEventListener('DOMContentLoaded', function () {
     const query = [gender, ai, occupation];
     console.log('Query:', query);
 
-    const results = filterImagesByCriteria(query, genderedImageList);
-    console.log('Matches:', results);
+    // Filter and (optionally) shuffle to randomize the order
+    let results = filterImagesByCriteria(query, genderedImageList);
+    if (typeof shuffle === 'function') results = shuffle(results.slice());
+    console.log('Matches (shuffled):', results);
 
-    // Create or reuse a results element under the form
-    let resultsEl = document.getElementById('results');
-    if (!resultsEl) {
-      resultsEl = document.createElement('pre');
-      resultsEl.id = 'results';
-      resultsEl.style.whiteSpace = 'pre-wrap';
-      resultsEl.style.marginTop = '12px';
-      resultsEl.style.padding = '8px';
-      resultsEl.style.border = '1px solid #ddd';
-      resultsEl.style.background = '#fafafa';
-      form.insertAdjacentElement('afterend', resultsEl);
+    // Create/locate the gallery that shows the images
+    let gallery = document.getElementById('gallery');
+    if (!gallery) {
+      gallery = document.createElement('div');
+      gallery.id = 'gallery';
+      gallery.style.display = 'grid';
+      gallery.style.gridTemplateColumns = 'repeat(auto-fill, minmax(180px, 1fr))';
+      gallery.style.gap = '12px';
+      gallery.style.marginTop = '12px';
+      form.insertAdjacentElement('afterend', gallery);
     }
 
+    // Clear previous content
+    gallery.innerHTML = '';
+
     if (results.length === 0) {
-      resultsEl.textContent = 'No matches found for the selected criteria.';
+      const msg = document.createElement('div');
+      msg.textContent = 'No matches found for the selected criteria.';
+      msg.style.padding = '8px';
+      msg.style.border = '1px solid #ddd';
+      msg.style.background = '#fafafa';
+      gallery.appendChild(msg);
       return;
     }
 
-    // Print only the image paths from the matched rows
-    const paths = results.map(r => r.newFilePath).join('\n');
-    resultsEl.textContent = paths;
+    // Render only images — prefix with `images/` if needed
+    results.forEach(r => {
+      const fig = document.createElement('figure');
+      fig.style.margin = '0';
+
+      const img = document.createElement('img');
+      const raw = (r.newFilePath || '').trim();
+      let src = raw;
+
+      // If it's not absolute and doesn't already start with 'images/', add the prefix
+      if (!/^https?:\/\//i.test(src) && !src.startsWith('images/')) {
+        src = 'images/' + src;
+      }
+
+      img.src = src;
+      img.alt = r.imgCareer || '';
+      img.loading = 'lazy';
+      img.style.width = '100%';
+      img.style.height = 'auto';
+      img.style.display = 'block';
+
+      // If an image fails to load, quietly skip it
+      img.onerror = () => { fig.remove(); };
+
+      fig.appendChild(img);
+      gallery.appendChild(fig);
+    });
   });
 });
