@@ -1276,6 +1276,15 @@ function shuffle(arr) {
 // const query = [genderSelect, AI_select, occupationSelect];
 // console.log(filterImagesByCriteria(query, genderedImageList));
 
+// Normalize and prefix image path so it resolves on GitHub Pages and locally
+function buildSrc(rawPath) {
+  let p = (rawPath || '').trim();
+  // normalize slashes and strip leading slashes
+  p = p.replace(/\\/g, '/').replace(/^\/+/, '');
+  // always ensure it starts with images/
+  if (!p.startsWith('images/')) p = 'images/' + p;
+  return p;
+}
 
 document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('filterForm');
@@ -1291,24 +1300,24 @@ document.addEventListener('DOMContentLoaded', function () {
     const query = [gender, ai, occupation];
     console.log('Query:', query);
 
-    // Filter and (optionally) shuffle to randomize the order
+    // Filter and shuffle the results randomly
     let results = filterImagesByCriteria(query, genderedImageList);
     if (typeof shuffle === 'function') results = shuffle(results.slice());
     console.log('Matches (shuffled):', results);
 
-    // Create/locate the gallery that shows the images
+    // Create or find the gallery container
     let gallery = document.getElementById('gallery');
     if (!gallery) {
       gallery = document.createElement('div');
       gallery.id = 'gallery';
       gallery.style.display = 'grid';
-      gallery.style.gridTemplateColumns = 'repeat(auto-fill, minmax(180px, 1fr))';
-      gallery.style.gap = '12px';
-      gallery.style.marginTop = '12px';
+      gallery.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
+      gallery.style.gap = '16px';
+      gallery.style.marginTop = '16px';
       form.insertAdjacentElement('afterend', gallery);
     }
 
-    // Clear previous content
+    // Clear old images
     gallery.innerHTML = '';
 
     if (results.length === 0) {
@@ -1317,23 +1326,20 @@ document.addEventListener('DOMContentLoaded', function () {
       msg.style.padding = '8px';
       msg.style.border = '1px solid #ddd';
       msg.style.background = '#fafafa';
+      msg.style.gridColumn = '1 / -1';
       gallery.appendChild(msg);
       return;
     }
 
-    // Render only images — prefix with `images/` if needed
+    // Render image results
     results.forEach(r => {
       const fig = document.createElement('figure');
       fig.style.margin = '0';
+      fig.style.padding = '0';
 
       const img = document.createElement('img');
-      const raw = (r.newFilePath || '').trim();
-      let src = raw;
-
-      // If it's not absolute and doesn't already start with 'images/', add the prefix
-      if (!/^https?:\/\//i.test(src) && !src.startsWith('images/')) {
-        src = 'images/' + src;
-      }
+      const src = buildSrc(r.newFilePath);
+      console.log('IMG SRC →', src);
 
       img.src = src;
       img.alt = r.imgCareer || '';
@@ -1341,11 +1347,22 @@ document.addEventListener('DOMContentLoaded', function () {
       img.style.width = '100%';
       img.style.height = 'auto';
       img.style.display = 'block';
+      img.style.cursor = 'zoom-in';
+      img.addEventListener('click', () => window.open(img.src, '_blank'));
 
-      // If an image fails to load, quietly skip it
-      img.onerror = () => { fig.remove(); };
+      img.onerror = () => {
+        console.warn('Image failed to load:', img.src);
+        if (img.parentElement) img.parentElement.remove();
+      };
+
+      const cap = document.createElement('figcaption');
+      cap.textContent = `${r.imgCareer} — ${r.AI} (${r.imgGender === 'M' ? 'Man' : 'Woman'})`;
+      cap.style.fontSize = '12px';
+      cap.style.textAlign = 'center';
+      cap.style.marginTop = '4px';
 
       fig.appendChild(img);
+      fig.appendChild(cap);
       gallery.appendChild(fig);
     });
   });
